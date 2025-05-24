@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator zod {
+  provider = "zod-prisma-types"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  uid                String       @id @default(auto()) @map("_id") @db.ObjectId
+  email              String       @unique
+  password           String
+  name               String
+  age                Int
+  profile_picture    String
+  created_at         DateTime     @default(now())
+  updated_at         DateTime
+  authToken          AuthToken?   @relation(fields: [authTokenId], references: [id])
+  authTokenId        String?      @unique @db.ObjectId
+  task               Task[]
+  passwordResetToken String?
+  marketLists        MarketList[]
+}
+
+model AuthToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  createdAt DateTime
+  expiresAt DateTime
+  User      User?
+}
+
+model Task {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  text        String
+  completed   Boolean
+  createdAt   DateTime
+  completedAt DateTime?
+  priority    String
+  User        User?     @relation(fields: [userUid], references: [uid])
+  userUid     String?   @db.ObjectId
+}
+
+model MarketList {
+  id      String           @id @default(auto()) @map("_id") @db.ObjectId
+  title   String
+  items   MarketListItem[]
+  User    User?            @relation(fields: [userUid], references: [uid])
+  userUid String?          @db.ObjectId
+}
+
+model MarketListItem {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  price    Float
+  quantity Int
+
+  MarketList   MarketList? @relation(fields: [marketListId], references: [id])
+  marketListId String?     @db.ObjectId
+}

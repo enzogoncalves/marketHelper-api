@@ -1,0 +1,55 @@
+{
+  "name": "markethelper",
+  "version": "1.0.0",
+  "description": "API of the Market Helper App",
+  "main": "src/server.ts",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsup src",
+    "start": "node dist/server.js"
+  },
+  "keywords": [],
+  "author": "Enzo Mateus Gonçalves",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/express": "^5.0.0",
+    "@types/express-fileupload": "^1.5.1",
+    "@types/node": "^22.10.7",
+    "prisma": "^6.2.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.735.0",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^10.0.2",
+    "@fastify/jwt": "^9.0.3",
+    "@fastify/multipart": "^9.0.3",
+    "@fastify/rate-limit": "^10.2.2",
+    "@fastify/swagger": "^9.4.2",
+    "@fastify/swagger-ui": "^5.2.1",
+    "@prisma/client": "^6.2.1",
+    "bcrypt": "^5.1.1",
+    "date-fns": "^4.1.0",
+    "express": "^4.21.2",
+    "express-fileupload": "^1.5.1",
+    "fastify": "^5.2.1",
+    "fastify-type-provider-zod": "^4.0.2",
+    "jose": "^5.9.6",
+    "mailersend": "^2.3.0",
+    "mongodb": "^6.13.0",
+    "nanoid": "^5.0.9",
+    "tsup": "^8.3.6",
+    "zod": "^3.24.1",
+    "zod-prisma-types": "^3.2.1"
+  },
+  "overrides": {
+    "glob": "10.4.2",
+    "rimraf": "5.0.7"
+  }
+}
