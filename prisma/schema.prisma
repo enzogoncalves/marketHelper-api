@@ -62,11 +62,24 @@ model MarketList {
 }
 
 model MarketListItem {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
   name     String
-  price    Float
+  prices   Price[]
   quantity Int
+  weight   String?
+  currency String
+  brand    String
 
   MarketList   MarketList? @relation(fields: [marketListId], references: [id])
   marketListId String?     @db.ObjectId
+}
+
+model Price {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  type  String
+  value Int
+  unit  String
+
+  MarketListItem   MarketListItem? @relation(fields: [marketListItemId], references: [id])
+  marketListItemId String?         @db.ObjectId
 }

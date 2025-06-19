@@ -34,6 +34,8 @@
     "@fastify/swagger": "^9.4.2",
     "@fastify/swagger-ui": "^5.2.1",
     "@prisma/client": "^6.2.1",
+    "@tensorflow/tfjs": "^4.22.0",
+    "axios": "^1.9.0",
     "bcrypt": "^5.1.1",
     "date-fns": "^4.1.0",
     "express": "^4.21.2",
@@ -44,6 +46,7 @@
     "mailersend": "^2.3.0",
     "mongodb": "^6.13.0",
     "nanoid": "^5.0.9",
+    "ollama": "^0.5.15",
     "tsup": "^8.3.6",
     "zod": "^3.24.1",
     "zod-prisma-types": "^3.2.1"

@@ -1,4 +1,7 @@
 import Fastify, { FastifyReply, FastifyRequest } from 'fastify';
+import FastifyMultipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
+
 import { fastifyCors } from '@fastify/cors'
 import { validatorCompiler, serializerCompiler, ZodTypeProvider, jsonSchemaTransform } from "fastify-type-provider-zod";
 import { fastifySwagger } from "@fastify/swagger";
@@ -11,6 +14,9 @@ import { usersRouter } from "./routers/Users/users_router";
 import { authRouter } from "./routers/Auth/auth_router";
 import { marketListRouter } from "./routers/MarketList/marketList_router";
 import { marketListItemRouter } from "./routers/MarketListItem/marketListItem_router";
+import { imageDetectionRouter } from "./routers/ImageDetection/imageDetection_router";
+import path from "path";
+import { textExtractionRouter } from "./routers/TextExtraction/textExtractionRouter";
 
 export const app = Fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -20,6 +26,18 @@ app.setSerializerCompiler(serializerCompiler)
 app.register(fastifyCors, { origin: '*'})
 
 app.register(fjwt, { secret: 'my-secret-key' }) //TODO: Change this at production
+
+app.register(FastifyMultipart, {
+	// attachFieldsToBody: true,
+	limits: {
+		fileSize: 1000 * 1024 * 1024, // 1 GB
+	}
+})
+
+// app.register(fastifyStatic), ({
+//   root: path.join(__dirname, 'uploads'), // Path to your uploads directory
+//   prefix: '/images/', // Optional: Prefix for serving images
+// });
 
 app.addHook('preHandler', (req, res, next) => {
 	req.jwt = app.jwt
@@ -69,6 +87,8 @@ app.register(userRouter, { prefix: '/user'})
 app.register(usersRouter, { prefix: '/users'})
 app.register(marketListRouter, { prefix: '/marketList'})
 app.register(marketListItemRouter, { prefix: '/marketListItem'})
+app.register(imageDetectionRouter, { prefix: '/imageDetection'})
+app.register(textExtractionRouter, { prefix: '/textExtraction'})
 
 app.listen({host: '0.0.0.0', port: process.env.PORT ? Number(process.env.PORT) : 3000}).then(() => {
 	console.log(`HTTP server running at port ${process.env.PORT ? Number(process.env.PORT) : '3000'}!`)

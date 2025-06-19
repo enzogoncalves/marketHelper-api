@@ -18,7 +18,9 @@ export const TaskScalarFieldEnumSchema = z.enum(['id','title','text','completed'
 
 export const MarketListScalarFieldEnumSchema = z.enum(['id','title','userUid']);
 
-export const MarketListItemScalarFieldEnumSchema = z.enum(['id','name','price','quantity','marketListId']);
+export const MarketListItemScalarFieldEnumSchema = z.enum(['id','name','quantity','weight','currency','brand','marketListId']);
+
+export const PriceScalarFieldEnumSchema = z.enum(['id','type','value','unit','marketListItemId']);
 
 export const SortOrderSchema = z.enum(['asc','desc']);
 
@@ -95,12 +97,28 @@ export type MarketList = z.infer<typeof MarketListSchema>
 export const MarketListItemSchema = z.object({
   id: z.string(),
   name: z.string(),
-  price: z.number(),
   quantity: z.number().int(),
+  weight: z.string().nullable(),
+  currency: z.string(),
+  brand: z.string(),
   marketListId: z.string().nullable(),
 })
 
 export type MarketListItem = z.infer<typeof MarketListItemSchema>
+
+/////////////////////////////////////////
+// PRICE SCHEMA
+/////////////////////////////////////////
+
+export const PriceSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  value: z.number().int(),
+  unit: z.string(),
+  marketListItemId: z.string().nullable(),
+})
+
+export type Price = z.infer<typeof PriceSchema>
 
 /////////////////////////////////////////
 // SELECT & INCLUDE
@@ -224,13 +242,45 @@ export const MarketListItemArgsSchema: z.ZodType<Prisma.MarketListItemDefaultArg
   include: z.lazy(() => MarketListItemIncludeSchema).optional(),
 }).strict();
 
+export const MarketListItemCountOutputTypeArgsSchema: z.ZodType<Prisma.MarketListItemCountOutputTypeDefaultArgs> = z.object({
+  select: z.lazy(() => MarketListItemCountOutputTypeSelectSchema).nullish(),
+}).strict();
+
+export const MarketListItemCountOutputTypeSelectSchema: z.ZodType<Prisma.MarketListItemCountOutputTypeSelect> = z.object({
+  prices: z.boolean().optional(),
+}).strict();
+
 export const MarketListItemSelectSchema: z.ZodType<Prisma.MarketListItemSelect> = z.object({
   id: z.boolean().optional(),
   name: z.boolean().optional(),
-  price: z.boolean().optional(),
   quantity: z.boolean().optional(),
+  weight: z.boolean().optional(),
+  currency: z.boolean().optional(),
+  brand: z.boolean().optional(),
   marketListId: z.boolean().optional(),
+  prices: z.union([z.boolean(),z.lazy(() => PriceArgsSchema)]).optional(),
   MarketList: z.union([z.boolean(),z.lazy(() => MarketListArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => MarketListItemCountOutputTypeArgsSchema)]).optional(),
+}).strict()
+
+// PRICE
+//------------------------------------------------------
+
+export const PriceIncludeSchema: z.ZodType<Prisma.PriceInclude> = z.object({
+}).strict()
+
+export const PriceArgsSchema: z.ZodType<Prisma.PriceDefaultArgs> = z.object({
+  select: z.lazy(() => PriceSelectSchema).optional(),
+  include: z.lazy(() => PriceIncludeSchema).optional(),
+}).strict();
+
+export const PriceSelectSchema: z.ZodType<Prisma.PriceSelect> = z.object({
+  id: z.boolean().optional(),
+  type: z.boolean().optional(),
+  value: z.boolean().optional(),
+  unit: z.boolean().optional(),
+  marketListItemId: z.boolean().optional(),
+  MarketListItem: z.union([z.boolean(),z.lazy(() => MarketListItemArgsSchema)]).optional(),
 }).strict()
 
 
@@ -546,18 +596,24 @@ export const MarketListItemWhereInputSchema: z.ZodType<Prisma.MarketListItemWher
   NOT: z.union([ z.lazy(() => MarketListItemWhereInputSchema),z.lazy(() => MarketListItemWhereInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  price: z.union([ z.lazy(() => FloatFilterSchema),z.number() ]).optional(),
   quantity: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  weight: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  currency: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  brand: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   marketListId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  prices: z.lazy(() => PriceListRelationFilterSchema).optional(),
   MarketList: z.union([ z.lazy(() => MarketListNullableScalarRelationFilterSchema),z.lazy(() => MarketListWhereInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const MarketListItemOrderByWithRelationInputSchema: z.ZodType<Prisma.MarketListItemOrderByWithRelationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  price: z.lazy(() => SortOrderSchema).optional(),
   quantity: z.lazy(() => SortOrderSchema).optional(),
+  weight: z.lazy(() => SortOrderSchema).optional(),
+  currency: z.lazy(() => SortOrderSchema).optional(),
+  brand: z.lazy(() => SortOrderSchema).optional(),
   marketListId: z.lazy(() => SortOrderSchema).optional(),
+  prices: z.lazy(() => PriceOrderByRelationAggregateInputSchema).optional(),
   MarketList: z.lazy(() => MarketListOrderByWithRelationInputSchema).optional()
 }).strict();
 
@@ -570,17 +626,22 @@ export const MarketListItemWhereUniqueInputSchema: z.ZodType<Prisma.MarketListIt
   OR: z.lazy(() => MarketListItemWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => MarketListItemWhereInputSchema),z.lazy(() => MarketListItemWhereInputSchema).array() ]).optional(),
   name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  price: z.union([ z.lazy(() => FloatFilterSchema),z.number() ]).optional(),
   quantity: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
+  weight: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  currency: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  brand: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   marketListId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  prices: z.lazy(() => PriceListRelationFilterSchema).optional(),
   MarketList: z.union([ z.lazy(() => MarketListNullableScalarRelationFilterSchema),z.lazy(() => MarketListWhereInputSchema) ]).optional().nullable(),
 }).strict());
 
 export const MarketListItemOrderByWithAggregationInputSchema: z.ZodType<Prisma.MarketListItemOrderByWithAggregationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  price: z.lazy(() => SortOrderSchema).optional(),
   quantity: z.lazy(() => SortOrderSchema).optional(),
+  weight: z.lazy(() => SortOrderSchema).optional(),
+  currency: z.lazy(() => SortOrderSchema).optional(),
+  brand: z.lazy(() => SortOrderSchema).optional(),
   marketListId: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => MarketListItemCountOrderByAggregateInputSchema).optional(),
   _avg: z.lazy(() => MarketListItemAvgOrderByAggregateInputSchema).optional(),
@@ -595,9 +656,71 @@ export const MarketListItemScalarWhereWithAggregatesInputSchema: z.ZodType<Prism
   NOT: z.union([ z.lazy(() => MarketListItemScalarWhereWithAggregatesInputSchema),z.lazy(() => MarketListItemScalarWhereWithAggregatesInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   name: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  price: z.union([ z.lazy(() => FloatWithAggregatesFilterSchema),z.number() ]).optional(),
   quantity: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
+  weight: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
+  currency: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  brand: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   marketListId: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
+}).strict();
+
+export const PriceWhereInputSchema: z.ZodType<Prisma.PriceWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => PriceWhereInputSchema),z.lazy(() => PriceWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => PriceWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => PriceWhereInputSchema),z.lazy(() => PriceWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  type: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  value: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  unit: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  marketListItemId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  MarketListItem: z.union([ z.lazy(() => MarketListItemNullableScalarRelationFilterSchema),z.lazy(() => MarketListItemWhereInputSchema) ]).optional().nullable(),
+}).strict();
+
+export const PriceOrderByWithRelationInputSchema: z.ZodType<Prisma.PriceOrderByWithRelationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
+  value: z.lazy(() => SortOrderSchema).optional(),
+  unit: z.lazy(() => SortOrderSchema).optional(),
+  marketListItemId: z.lazy(() => SortOrderSchema).optional(),
+  MarketListItem: z.lazy(() => MarketListItemOrderByWithRelationInputSchema).optional()
+}).strict();
+
+export const PriceWhereUniqueInputSchema: z.ZodType<Prisma.PriceWhereUniqueInput> = z.object({
+  id: z.string()
+})
+.and(z.object({
+  id: z.string().optional(),
+  AND: z.union([ z.lazy(() => PriceWhereInputSchema),z.lazy(() => PriceWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => PriceWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => PriceWhereInputSchema),z.lazy(() => PriceWhereInputSchema).array() ]).optional(),
+  type: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  value: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
+  unit: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  marketListItemId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  MarketListItem: z.union([ z.lazy(() => MarketListItemNullableScalarRelationFilterSchema),z.lazy(() => MarketListItemWhereInputSchema) ]).optional().nullable(),
+}).strict());
+
+export const PriceOrderByWithAggregationInputSchema: z.ZodType<Prisma.PriceOrderByWithAggregationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
+  value: z.lazy(() => SortOrderSchema).optional(),
+  unit: z.lazy(() => SortOrderSchema).optional(),
+  marketListItemId: z.lazy(() => SortOrderSchema).optional(),
+  _count: z.lazy(() => PriceCountOrderByAggregateInputSchema).optional(),
+  _avg: z.lazy(() => PriceAvgOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => PriceMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => PriceMinOrderByAggregateInputSchema).optional(),
+  _sum: z.lazy(() => PriceSumOrderByAggregateInputSchema).optional()
+}).strict();
+
+export const PriceScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.PriceScalarWhereWithAggregatesInput> = z.object({
+  AND: z.union([ z.lazy(() => PriceScalarWhereWithAggregatesInputSchema),z.lazy(() => PriceScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => PriceScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => PriceScalarWhereWithAggregatesInputSchema),z.lazy(() => PriceScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  type: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  value: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
+  unit: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  marketListItemId: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
 export const UserCreateInputSchema: z.ZodType<Prisma.UserCreateInput> = z.object({
@@ -859,52 +982,121 @@ export const MarketListUncheckedUpdateManyInputSchema: z.ZodType<Prisma.MarketLi
 export const MarketListItemCreateInputSchema: z.ZodType<Prisma.MarketListItemCreateInput> = z.object({
   id: z.string().optional(),
   name: z.string(),
-  price: z.number(),
   quantity: z.number().int(),
+  weight: z.string().optional().nullable(),
+  currency: z.string(),
+  brand: z.string(),
+  prices: z.lazy(() => PriceCreateNestedManyWithoutMarketListItemInputSchema).optional(),
   MarketList: z.lazy(() => MarketListCreateNestedOneWithoutItemsInputSchema).optional()
 }).strict();
 
 export const MarketListItemUncheckedCreateInputSchema: z.ZodType<Prisma.MarketListItemUncheckedCreateInput> = z.object({
   id: z.string().optional(),
   name: z.string(),
-  price: z.number(),
   quantity: z.number().int(),
-  marketListId: z.string().optional().nullable()
+  weight: z.string().optional().nullable(),
+  currency: z.string(),
+  brand: z.string(),
+  marketListId: z.string().optional().nullable(),
+  prices: z.lazy(() => PriceUncheckedCreateNestedManyWithoutMarketListItemInputSchema).optional()
 }).strict();
 
 export const MarketListItemUpdateInputSchema: z.ZodType<Prisma.MarketListItemUpdateInput> = z.object({
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  price: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   quantity: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  weight: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  currency: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  brand: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  prices: z.lazy(() => PriceUpdateManyWithoutMarketListItemNestedInputSchema).optional(),
   MarketList: z.lazy(() => MarketListUpdateOneWithoutItemsNestedInputSchema).optional()
 }).strict();
 
 export const MarketListItemUncheckedUpdateInputSchema: z.ZodType<Prisma.MarketListItemUncheckedUpdateInput> = z.object({
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  price: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   quantity: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  weight: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  currency: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  brand: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   marketListId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  prices: z.lazy(() => PriceUncheckedUpdateManyWithoutMarketListItemNestedInputSchema).optional()
 }).strict();
 
 export const MarketListItemCreateManyInputSchema: z.ZodType<Prisma.MarketListItemCreateManyInput> = z.object({
   id: z.string().optional(),
   name: z.string(),
-  price: z.number(),
   quantity: z.number().int(),
+  weight: z.string().optional().nullable(),
+  currency: z.string(),
+  brand: z.string(),
   marketListId: z.string().optional().nullable()
 }).strict();
 
 export const MarketListItemUpdateManyMutationInputSchema: z.ZodType<Prisma.MarketListItemUpdateManyMutationInput> = z.object({
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  price: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   quantity: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  weight: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  currency: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  brand: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const MarketListItemUncheckedUpdateManyInputSchema: z.ZodType<Prisma.MarketListItemUncheckedUpdateManyInput> = z.object({
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  price: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   quantity: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  weight: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  currency: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  brand: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   marketListId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+}).strict();
+
+export const PriceCreateInputSchema: z.ZodType<Prisma.PriceCreateInput> = z.object({
+  id: z.string().optional(),
+  type: z.string(),
+  value: z.number().int(),
+  unit: z.string(),
+  MarketListItem: z.lazy(() => MarketListItemCreateNestedOneWithoutPricesInputSchema).optional()
+}).strict();
+
+export const PriceUncheckedCreateInputSchema: z.ZodType<Prisma.PriceUncheckedCreateInput> = z.object({
+  id: z.string().optional(),
+  type: z.string(),
+  value: z.number().int(),
+  unit: z.string(),
+  marketListItemId: z.string().optional().nullable()
+}).strict();
+
+export const PriceUpdateInputSchema: z.ZodType<Prisma.PriceUpdateInput> = z.object({
+  type: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  value: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  unit: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  MarketListItem: z.lazy(() => MarketListItemUpdateOneWithoutPricesNestedInputSchema).optional()
+}).strict();
+
+export const PriceUncheckedUpdateInputSchema: z.ZodType<Prisma.PriceUncheckedUpdateInput> = z.object({
+  type: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  value: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  unit: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  marketListItemId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+}).strict();
+
+export const PriceCreateManyInputSchema: z.ZodType<Prisma.PriceCreateManyInput> = z.object({
+  id: z.string().optional(),
+  type: z.string(),
+  value: z.number().int(),
+  unit: z.string(),
+  marketListItemId: z.string().optional().nullable()
+}).strict();
+
+export const PriceUpdateManyMutationInputSchema: z.ZodType<Prisma.PriceUpdateManyMutationInput> = z.object({
+  type: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  value: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  unit: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const PriceUncheckedUpdateManyInputSchema: z.ZodType<Prisma.PriceUncheckedUpdateManyInput> = z.object({
+  type: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  value: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  unit: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  marketListItemId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const StringFilterSchema: z.ZodType<Prisma.StringFilter> = z.object({
@@ -1226,15 +1418,10 @@ export const MarketListMinOrderByAggregateInputSchema: z.ZodType<Prisma.MarketLi
   userUid: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
-export const FloatFilterSchema: z.ZodType<Prisma.FloatFilter> = z.object({
-  equals: z.number().optional(),
-  in: z.number().array().optional(),
-  notIn: z.number().array().optional(),
-  lt: z.number().optional(),
-  lte: z.number().optional(),
-  gt: z.number().optional(),
-  gte: z.number().optional(),
-  not: z.union([ z.number(),z.lazy(() => NestedFloatFilterSchema) ]).optional(),
+export const PriceListRelationFilterSchema: z.ZodType<Prisma.PriceListRelationFilter> = z.object({
+  every: z.lazy(() => PriceWhereInputSchema).optional(),
+  some: z.lazy(() => PriceWhereInputSchema).optional(),
+  none: z.lazy(() => PriceWhereInputSchema).optional()
 }).strict();
 
 export const MarketListNullableScalarRelationFilterSchema: z.ZodType<Prisma.MarketListNullableScalarRelationFilter> = z.object({
@@ -1242,54 +1429,83 @@ export const MarketListNullableScalarRelationFilterSchema: z.ZodType<Prisma.Mark
   isNot: z.lazy(() => MarketListWhereInputSchema).optional().nullable()
 }).strict();
 
+export const PriceOrderByRelationAggregateInputSchema: z.ZodType<Prisma.PriceOrderByRelationAggregateInput> = z.object({
+  _count: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
 export const MarketListItemCountOrderByAggregateInputSchema: z.ZodType<Prisma.MarketListItemCountOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  price: z.lazy(() => SortOrderSchema).optional(),
   quantity: z.lazy(() => SortOrderSchema).optional(),
+  weight: z.lazy(() => SortOrderSchema).optional(),
+  currency: z.lazy(() => SortOrderSchema).optional(),
+  brand: z.lazy(() => SortOrderSchema).optional(),
   marketListId: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const MarketListItemAvgOrderByAggregateInputSchema: z.ZodType<Prisma.MarketListItemAvgOrderByAggregateInput> = z.object({
-  price: z.lazy(() => SortOrderSchema).optional(),
   quantity: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const MarketListItemMaxOrderByAggregateInputSchema: z.ZodType<Prisma.MarketListItemMaxOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  price: z.lazy(() => SortOrderSchema).optional(),
   quantity: z.lazy(() => SortOrderSchema).optional(),
+  weight: z.lazy(() => SortOrderSchema).optional(),
+  currency: z.lazy(() => SortOrderSchema).optional(),
+  brand: z.lazy(() => SortOrderSchema).optional(),
   marketListId: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const MarketListItemMinOrderByAggregateInputSchema: z.ZodType<Prisma.MarketListItemMinOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  price: z.lazy(() => SortOrderSchema).optional(),
   quantity: z.lazy(() => SortOrderSchema).optional(),
+  weight: z.lazy(() => SortOrderSchema).optional(),
+  currency: z.lazy(() => SortOrderSchema).optional(),
+  brand: z.lazy(() => SortOrderSchema).optional(),
   marketListId: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const MarketListItemSumOrderByAggregateInputSchema: z.ZodType<Prisma.MarketListItemSumOrderByAggregateInput> = z.object({
-  price: z.lazy(() => SortOrderSchema).optional(),
   quantity: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
-export const FloatWithAggregatesFilterSchema: z.ZodType<Prisma.FloatWithAggregatesFilter> = z.object({
-  equals: z.number().optional(),
-  in: z.number().array().optional(),
-  notIn: z.number().array().optional(),
-  lt: z.number().optional(),
-  lte: z.number().optional(),
-  gt: z.number().optional(),
-  gte: z.number().optional(),
-  not: z.union([ z.number(),z.lazy(() => NestedFloatWithAggregatesFilterSchema) ]).optional(),
-  _count: z.lazy(() => NestedIntFilterSchema).optional(),
-  _avg: z.lazy(() => NestedFloatFilterSchema).optional(),
-  _sum: z.lazy(() => NestedFloatFilterSchema).optional(),
-  _min: z.lazy(() => NestedFloatFilterSchema).optional(),
-  _max: z.lazy(() => NestedFloatFilterSchema).optional()
+export const MarketListItemNullableScalarRelationFilterSchema: z.ZodType<Prisma.MarketListItemNullableScalarRelationFilter> = z.object({
+  is: z.lazy(() => MarketListItemWhereInputSchema).optional().nullable(),
+  isNot: z.lazy(() => MarketListItemWhereInputSchema).optional().nullable()
+}).strict();
+
+export const PriceCountOrderByAggregateInputSchema: z.ZodType<Prisma.PriceCountOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
+  value: z.lazy(() => SortOrderSchema).optional(),
+  unit: z.lazy(() => SortOrderSchema).optional(),
+  marketListItemId: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const PriceAvgOrderByAggregateInputSchema: z.ZodType<Prisma.PriceAvgOrderByAggregateInput> = z.object({
+  value: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const PriceMaxOrderByAggregateInputSchema: z.ZodType<Prisma.PriceMaxOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
+  value: z.lazy(() => SortOrderSchema).optional(),
+  unit: z.lazy(() => SortOrderSchema).optional(),
+  marketListItemId: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const PriceMinOrderByAggregateInputSchema: z.ZodType<Prisma.PriceMinOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
+  value: z.lazy(() => SortOrderSchema).optional(),
+  unit: z.lazy(() => SortOrderSchema).optional(),
+  marketListItemId: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const PriceSumOrderByAggregateInputSchema: z.ZodType<Prisma.PriceSumOrderByAggregateInput> = z.object({
+  value: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const AuthTokenCreateNestedOneWithoutUserInputSchema: z.ZodType<Prisma.AuthTokenCreateNestedOneWithoutUserInput> = z.object({
@@ -1528,18 +1744,38 @@ export const MarketListItemUncheckedUpdateManyWithoutMarketListNestedInputSchema
   deleteMany: z.union([ z.lazy(() => MarketListItemScalarWhereInputSchema),z.lazy(() => MarketListItemScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
+export const PriceCreateNestedManyWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceCreateNestedManyWithoutMarketListItemInput> = z.object({
+  create: z.union([ z.lazy(() => PriceCreateWithoutMarketListItemInputSchema),z.lazy(() => PriceCreateWithoutMarketListItemInputSchema).array(),z.lazy(() => PriceUncheckedCreateWithoutMarketListItemInputSchema),z.lazy(() => PriceUncheckedCreateWithoutMarketListItemInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => PriceCreateOrConnectWithoutMarketListItemInputSchema),z.lazy(() => PriceCreateOrConnectWithoutMarketListItemInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => PriceCreateManyMarketListItemInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => PriceWhereUniqueInputSchema),z.lazy(() => PriceWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
 export const MarketListCreateNestedOneWithoutItemsInputSchema: z.ZodType<Prisma.MarketListCreateNestedOneWithoutItemsInput> = z.object({
   create: z.union([ z.lazy(() => MarketListCreateWithoutItemsInputSchema),z.lazy(() => MarketListUncheckedCreateWithoutItemsInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => MarketListCreateOrConnectWithoutItemsInputSchema).optional(),
   connect: z.lazy(() => MarketListWhereUniqueInputSchema).optional()
 }).strict();
 
-export const FloatFieldUpdateOperationsInputSchema: z.ZodType<Prisma.FloatFieldUpdateOperationsInput> = z.object({
-  set: z.number().optional(),
-  increment: z.number().optional(),
-  decrement: z.number().optional(),
-  multiply: z.number().optional(),
-  divide: z.number().optional()
+export const PriceUncheckedCreateNestedManyWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceUncheckedCreateNestedManyWithoutMarketListItemInput> = z.object({
+  create: z.union([ z.lazy(() => PriceCreateWithoutMarketListItemInputSchema),z.lazy(() => PriceCreateWithoutMarketListItemInputSchema).array(),z.lazy(() => PriceUncheckedCreateWithoutMarketListItemInputSchema),z.lazy(() => PriceUncheckedCreateWithoutMarketListItemInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => PriceCreateOrConnectWithoutMarketListItemInputSchema),z.lazy(() => PriceCreateOrConnectWithoutMarketListItemInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => PriceCreateManyMarketListItemInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => PriceWhereUniqueInputSchema),z.lazy(() => PriceWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
+export const PriceUpdateManyWithoutMarketListItemNestedInputSchema: z.ZodType<Prisma.PriceUpdateManyWithoutMarketListItemNestedInput> = z.object({
+  create: z.union([ z.lazy(() => PriceCreateWithoutMarketListItemInputSchema),z.lazy(() => PriceCreateWithoutMarketListItemInputSchema).array(),z.lazy(() => PriceUncheckedCreateWithoutMarketListItemInputSchema),z.lazy(() => PriceUncheckedCreateWithoutMarketListItemInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => PriceCreateOrConnectWithoutMarketListItemInputSchema),z.lazy(() => PriceCreateOrConnectWithoutMarketListItemInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => PriceUpsertWithWhereUniqueWithoutMarketListItemInputSchema),z.lazy(() => PriceUpsertWithWhereUniqueWithoutMarketListItemInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => PriceCreateManyMarketListItemInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => PriceWhereUniqueInputSchema),z.lazy(() => PriceWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => PriceWhereUniqueInputSchema),z.lazy(() => PriceWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => PriceWhereUniqueInputSchema),z.lazy(() => PriceWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => PriceWhereUniqueInputSchema),z.lazy(() => PriceWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => PriceUpdateWithWhereUniqueWithoutMarketListItemInputSchema),z.lazy(() => PriceUpdateWithWhereUniqueWithoutMarketListItemInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => PriceUpdateManyWithWhereWithoutMarketListItemInputSchema),z.lazy(() => PriceUpdateManyWithWhereWithoutMarketListItemInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => PriceScalarWhereInputSchema),z.lazy(() => PriceScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
 export const MarketListUpdateOneWithoutItemsNestedInputSchema: z.ZodType<Prisma.MarketListUpdateOneWithoutItemsNestedInput> = z.object({
@@ -1550,6 +1786,36 @@ export const MarketListUpdateOneWithoutItemsNestedInputSchema: z.ZodType<Prisma.
   delete: z.union([ z.boolean(),z.lazy(() => MarketListWhereInputSchema) ]).optional(),
   connect: z.lazy(() => MarketListWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => MarketListUpdateToOneWithWhereWithoutItemsInputSchema),z.lazy(() => MarketListUpdateWithoutItemsInputSchema),z.lazy(() => MarketListUncheckedUpdateWithoutItemsInputSchema) ]).optional(),
+}).strict();
+
+export const PriceUncheckedUpdateManyWithoutMarketListItemNestedInputSchema: z.ZodType<Prisma.PriceUncheckedUpdateManyWithoutMarketListItemNestedInput> = z.object({
+  create: z.union([ z.lazy(() => PriceCreateWithoutMarketListItemInputSchema),z.lazy(() => PriceCreateWithoutMarketListItemInputSchema).array(),z.lazy(() => PriceUncheckedCreateWithoutMarketListItemInputSchema),z.lazy(() => PriceUncheckedCreateWithoutMarketListItemInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => PriceCreateOrConnectWithoutMarketListItemInputSchema),z.lazy(() => PriceCreateOrConnectWithoutMarketListItemInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => PriceUpsertWithWhereUniqueWithoutMarketListItemInputSchema),z.lazy(() => PriceUpsertWithWhereUniqueWithoutMarketListItemInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => PriceCreateManyMarketListItemInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => PriceWhereUniqueInputSchema),z.lazy(() => PriceWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => PriceWhereUniqueInputSchema),z.lazy(() => PriceWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => PriceWhereUniqueInputSchema),z.lazy(() => PriceWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => PriceWhereUniqueInputSchema),z.lazy(() => PriceWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => PriceUpdateWithWhereUniqueWithoutMarketListItemInputSchema),z.lazy(() => PriceUpdateWithWhereUniqueWithoutMarketListItemInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => PriceUpdateManyWithWhereWithoutMarketListItemInputSchema),z.lazy(() => PriceUpdateManyWithWhereWithoutMarketListItemInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => PriceScalarWhereInputSchema),z.lazy(() => PriceScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
+export const MarketListItemCreateNestedOneWithoutPricesInputSchema: z.ZodType<Prisma.MarketListItemCreateNestedOneWithoutPricesInput> = z.object({
+  create: z.union([ z.lazy(() => MarketListItemCreateWithoutPricesInputSchema),z.lazy(() => MarketListItemUncheckedCreateWithoutPricesInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => MarketListItemCreateOrConnectWithoutPricesInputSchema).optional(),
+  connect: z.lazy(() => MarketListItemWhereUniqueInputSchema).optional()
+}).strict();
+
+export const MarketListItemUpdateOneWithoutPricesNestedInputSchema: z.ZodType<Prisma.MarketListItemUpdateOneWithoutPricesNestedInput> = z.object({
+  create: z.union([ z.lazy(() => MarketListItemCreateWithoutPricesInputSchema),z.lazy(() => MarketListItemUncheckedCreateWithoutPricesInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => MarketListItemCreateOrConnectWithoutPricesInputSchema).optional(),
+  upsert: z.lazy(() => MarketListItemUpsertWithoutPricesInputSchema).optional(),
+  disconnect: z.boolean().optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => MarketListItemWhereInputSchema) ]).optional(),
+  connect: z.lazy(() => MarketListItemWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => MarketListItemUpdateToOneWithWhereWithoutPricesInputSchema),z.lazy(() => MarketListItemUpdateWithoutPricesInputSchema),z.lazy(() => MarketListItemUncheckedUpdateWithoutPricesInputSchema) ]).optional(),
 }).strict();
 
 export const NestedStringFilterSchema: z.ZodType<Prisma.NestedStringFilter> = z.object({
@@ -1729,22 +1995,6 @@ export const NestedDateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.
   _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
   _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
   isSet: z.boolean().optional()
-}).strict();
-
-export const NestedFloatWithAggregatesFilterSchema: z.ZodType<Prisma.NestedFloatWithAggregatesFilter> = z.object({
-  equals: z.number().optional(),
-  in: z.number().array().optional(),
-  notIn: z.number().array().optional(),
-  lt: z.number().optional(),
-  lte: z.number().optional(),
-  gt: z.number().optional(),
-  gte: z.number().optional(),
-  not: z.union([ z.number(),z.lazy(() => NestedFloatWithAggregatesFilterSchema) ]).optional(),
-  _count: z.lazy(() => NestedIntFilterSchema).optional(),
-  _avg: z.lazy(() => NestedFloatFilterSchema).optional(),
-  _sum: z.lazy(() => NestedFloatFilterSchema).optional(),
-  _min: z.lazy(() => NestedFloatFilterSchema).optional(),
-  _max: z.lazy(() => NestedFloatFilterSchema).optional()
 }).strict();
 
 export const AuthTokenCreateWithoutUserInputSchema: z.ZodType<Prisma.AuthTokenCreateWithoutUserInput> = z.object({
@@ -2037,15 +2287,21 @@ export const UserUncheckedUpdateWithoutTaskInputSchema: z.ZodType<Prisma.UserUnc
 export const MarketListItemCreateWithoutMarketListInputSchema: z.ZodType<Prisma.MarketListItemCreateWithoutMarketListInput> = z.object({
   id: z.string().optional(),
   name: z.string(),
-  price: z.number(),
-  quantity: z.number().int()
+  quantity: z.number().int(),
+  weight: z.string().optional().nullable(),
+  currency: z.string(),
+  brand: z.string(),
+  prices: z.lazy(() => PriceCreateNestedManyWithoutMarketListItemInputSchema).optional()
 }).strict();
 
 export const MarketListItemUncheckedCreateWithoutMarketListInputSchema: z.ZodType<Prisma.MarketListItemUncheckedCreateWithoutMarketListInput> = z.object({
   id: z.string().optional(),
   name: z.string(),
-  price: z.number(),
-  quantity: z.number().int()
+  quantity: z.number().int(),
+  weight: z.string().optional().nullable(),
+  currency: z.string(),
+  brand: z.string(),
+  prices: z.lazy(() => PriceUncheckedCreateNestedManyWithoutMarketListItemInputSchema).optional()
 }).strict();
 
 export const MarketListItemCreateOrConnectWithoutMarketListInputSchema: z.ZodType<Prisma.MarketListItemCreateOrConnectWithoutMarketListInput> = z.object({
@@ -2112,8 +2368,10 @@ export const MarketListItemScalarWhereInputSchema: z.ZodType<Prisma.MarketListIt
   NOT: z.union([ z.lazy(() => MarketListItemScalarWhereInputSchema),z.lazy(() => MarketListItemScalarWhereInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  price: z.union([ z.lazy(() => FloatFilterSchema),z.number() ]).optional(),
   quantity: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  weight: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  currency: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  brand: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   marketListId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
@@ -2154,6 +2412,29 @@ export const UserUncheckedUpdateWithoutMarketListsInputSchema: z.ZodType<Prisma.
   task: z.lazy(() => TaskUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
+export const PriceCreateWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceCreateWithoutMarketListItemInput> = z.object({
+  id: z.string().optional(),
+  type: z.string(),
+  value: z.number().int(),
+  unit: z.string()
+}).strict();
+
+export const PriceUncheckedCreateWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceUncheckedCreateWithoutMarketListItemInput> = z.object({
+  id: z.string().optional(),
+  type: z.string(),
+  value: z.number().int(),
+  unit: z.string()
+}).strict();
+
+export const PriceCreateOrConnectWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceCreateOrConnectWithoutMarketListItemInput> = z.object({
+  where: z.lazy(() => PriceWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => PriceCreateWithoutMarketListItemInputSchema),z.lazy(() => PriceUncheckedCreateWithoutMarketListItemInputSchema) ]),
+}).strict();
+
+export const PriceCreateManyMarketListItemInputEnvelopeSchema: z.ZodType<Prisma.PriceCreateManyMarketListItemInputEnvelope> = z.object({
+  data: z.union([ z.lazy(() => PriceCreateManyMarketListItemInputSchema),z.lazy(() => PriceCreateManyMarketListItemInputSchema).array() ]),
+}).strict();
+
 export const MarketListCreateWithoutItemsInputSchema: z.ZodType<Prisma.MarketListCreateWithoutItemsInput> = z.object({
   id: z.string().optional(),
   title: z.string(),
@@ -2169,6 +2450,33 @@ export const MarketListUncheckedCreateWithoutItemsInputSchema: z.ZodType<Prisma.
 export const MarketListCreateOrConnectWithoutItemsInputSchema: z.ZodType<Prisma.MarketListCreateOrConnectWithoutItemsInput> = z.object({
   where: z.lazy(() => MarketListWhereUniqueInputSchema),
   create: z.union([ z.lazy(() => MarketListCreateWithoutItemsInputSchema),z.lazy(() => MarketListUncheckedCreateWithoutItemsInputSchema) ]),
+}).strict();
+
+export const PriceUpsertWithWhereUniqueWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceUpsertWithWhereUniqueWithoutMarketListItemInput> = z.object({
+  where: z.lazy(() => PriceWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => PriceUpdateWithoutMarketListItemInputSchema),z.lazy(() => PriceUncheckedUpdateWithoutMarketListItemInputSchema) ]),
+  create: z.union([ z.lazy(() => PriceCreateWithoutMarketListItemInputSchema),z.lazy(() => PriceUncheckedCreateWithoutMarketListItemInputSchema) ]),
+}).strict();
+
+export const PriceUpdateWithWhereUniqueWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceUpdateWithWhereUniqueWithoutMarketListItemInput> = z.object({
+  where: z.lazy(() => PriceWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => PriceUpdateWithoutMarketListItemInputSchema),z.lazy(() => PriceUncheckedUpdateWithoutMarketListItemInputSchema) ]),
+}).strict();
+
+export const PriceUpdateManyWithWhereWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceUpdateManyWithWhereWithoutMarketListItemInput> = z.object({
+  where: z.lazy(() => PriceScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => PriceUpdateManyMutationInputSchema),z.lazy(() => PriceUncheckedUpdateManyWithoutMarketListItemInputSchema) ]),
+}).strict();
+
+export const PriceScalarWhereInputSchema: z.ZodType<Prisma.PriceScalarWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => PriceScalarWhereInputSchema),z.lazy(() => PriceScalarWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => PriceScalarWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => PriceScalarWhereInputSchema),z.lazy(() => PriceScalarWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  type: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  value: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  unit: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  marketListItemId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
 export const MarketListUpsertWithoutItemsInputSchema: z.ZodType<Prisma.MarketListUpsertWithoutItemsInput> = z.object({
@@ -2190,6 +2498,60 @@ export const MarketListUpdateWithoutItemsInputSchema: z.ZodType<Prisma.MarketLis
 export const MarketListUncheckedUpdateWithoutItemsInputSchema: z.ZodType<Prisma.MarketListUncheckedUpdateWithoutItemsInput> = z.object({
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   userUid: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+}).strict();
+
+export const MarketListItemCreateWithoutPricesInputSchema: z.ZodType<Prisma.MarketListItemCreateWithoutPricesInput> = z.object({
+  id: z.string().optional(),
+  name: z.string(),
+  quantity: z.number().int(),
+  weight: z.string().optional().nullable(),
+  currency: z.string(),
+  brand: z.string(),
+  MarketList: z.lazy(() => MarketListCreateNestedOneWithoutItemsInputSchema).optional()
+}).strict();
+
+export const MarketListItemUncheckedCreateWithoutPricesInputSchema: z.ZodType<Prisma.MarketListItemUncheckedCreateWithoutPricesInput> = z.object({
+  id: z.string().optional(),
+  name: z.string(),
+  quantity: z.number().int(),
+  weight: z.string().optional().nullable(),
+  currency: z.string(),
+  brand: z.string(),
+  marketListId: z.string().optional().nullable()
+}).strict();
+
+export const MarketListItemCreateOrConnectWithoutPricesInputSchema: z.ZodType<Prisma.MarketListItemCreateOrConnectWithoutPricesInput> = z.object({
+  where: z.lazy(() => MarketListItemWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => MarketListItemCreateWithoutPricesInputSchema),z.lazy(() => MarketListItemUncheckedCreateWithoutPricesInputSchema) ]),
+}).strict();
+
+export const MarketListItemUpsertWithoutPricesInputSchema: z.ZodType<Prisma.MarketListItemUpsertWithoutPricesInput> = z.object({
+  update: z.union([ z.lazy(() => MarketListItemUpdateWithoutPricesInputSchema),z.lazy(() => MarketListItemUncheckedUpdateWithoutPricesInputSchema) ]),
+  create: z.union([ z.lazy(() => MarketListItemCreateWithoutPricesInputSchema),z.lazy(() => MarketListItemUncheckedCreateWithoutPricesInputSchema) ]),
+  where: z.lazy(() => MarketListItemWhereInputSchema).optional()
+}).strict();
+
+export const MarketListItemUpdateToOneWithWhereWithoutPricesInputSchema: z.ZodType<Prisma.MarketListItemUpdateToOneWithWhereWithoutPricesInput> = z.object({
+  where: z.lazy(() => MarketListItemWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => MarketListItemUpdateWithoutPricesInputSchema),z.lazy(() => MarketListItemUncheckedUpdateWithoutPricesInputSchema) ]),
+}).strict();
+
+export const MarketListItemUpdateWithoutPricesInputSchema: z.ZodType<Prisma.MarketListItemUpdateWithoutPricesInput> = z.object({
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  quantity: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  weight: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  currency: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  brand: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  MarketList: z.lazy(() => MarketListUpdateOneWithoutItemsNestedInputSchema).optional()
+}).strict();
+
+export const MarketListItemUncheckedUpdateWithoutPricesInputSchema: z.ZodType<Prisma.MarketListItemUncheckedUpdateWithoutPricesInput> = z.object({
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  quantity: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  weight: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  currency: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  brand: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  marketListId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const TaskCreateManyUserInputSchema: z.ZodType<Prisma.TaskCreateManyUserInput> = z.object({
@@ -2251,26 +2613,61 @@ export const MarketListUncheckedUpdateManyWithoutUserInputSchema: z.ZodType<Pris
 export const MarketListItemCreateManyMarketListInputSchema: z.ZodType<Prisma.MarketListItemCreateManyMarketListInput> = z.object({
   id: z.string().optional(),
   name: z.string(),
-  price: z.number(),
-  quantity: z.number().int()
+  quantity: z.number().int(),
+  weight: z.string().optional().nullable(),
+  currency: z.string(),
+  brand: z.string()
 }).strict();
 
 export const MarketListItemUpdateWithoutMarketListInputSchema: z.ZodType<Prisma.MarketListItemUpdateWithoutMarketListInput> = z.object({
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  price: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   quantity: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  weight: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  currency: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  brand: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  prices: z.lazy(() => PriceUpdateManyWithoutMarketListItemNestedInputSchema).optional()
 }).strict();
 
 export const MarketListItemUncheckedUpdateWithoutMarketListInputSchema: z.ZodType<Prisma.MarketListItemUncheckedUpdateWithoutMarketListInput> = z.object({
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  price: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   quantity: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  weight: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  currency: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  brand: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  prices: z.lazy(() => PriceUncheckedUpdateManyWithoutMarketListItemNestedInputSchema).optional()
 }).strict();
 
 export const MarketListItemUncheckedUpdateManyWithoutMarketListInputSchema: z.ZodType<Prisma.MarketListItemUncheckedUpdateManyWithoutMarketListInput> = z.object({
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  price: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   quantity: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  weight: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  currency: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  brand: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const PriceCreateManyMarketListItemInputSchema: z.ZodType<Prisma.PriceCreateManyMarketListItemInput> = z.object({
+  id: z.string().optional(),
+  type: z.string(),
+  value: z.number().int(),
+  unit: z.string()
+}).strict();
+
+export const PriceUpdateWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceUpdateWithoutMarketListItemInput> = z.object({
+  type: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  value: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  unit: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const PriceUncheckedUpdateWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceUncheckedUpdateWithoutMarketListItemInput> = z.object({
+  type: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  value: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  unit: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const PriceUncheckedUpdateManyWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceUncheckedUpdateManyWithoutMarketListItemInput> = z.object({
+  type: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  value: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  unit: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 /////////////////////////////////////////
@@ -2587,6 +2984,68 @@ export const MarketListItemFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.MarketL
   where: MarketListItemWhereUniqueInputSchema,
 }).strict() ;
 
+export const PriceFindFirstArgsSchema: z.ZodType<Prisma.PriceFindFirstArgs> = z.object({
+  select: PriceSelectSchema.optional(),
+  include: PriceIncludeSchema.optional(),
+  where: PriceWhereInputSchema.optional(),
+  orderBy: z.union([ PriceOrderByWithRelationInputSchema.array(),PriceOrderByWithRelationInputSchema ]).optional(),
+  cursor: PriceWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ PriceScalarFieldEnumSchema,PriceScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const PriceFindFirstOrThrowArgsSchema: z.ZodType<Prisma.PriceFindFirstOrThrowArgs> = z.object({
+  select: PriceSelectSchema.optional(),
+  include: PriceIncludeSchema.optional(),
+  where: PriceWhereInputSchema.optional(),
+  orderBy: z.union([ PriceOrderByWithRelationInputSchema.array(),PriceOrderByWithRelationInputSchema ]).optional(),
+  cursor: PriceWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ PriceScalarFieldEnumSchema,PriceScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const PriceFindManyArgsSchema: z.ZodType<Prisma.PriceFindManyArgs> = z.object({
+  select: PriceSelectSchema.optional(),
+  include: PriceIncludeSchema.optional(),
+  where: PriceWhereInputSchema.optional(),
+  orderBy: z.union([ PriceOrderByWithRelationInputSchema.array(),PriceOrderByWithRelationInputSchema ]).optional(),
+  cursor: PriceWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ PriceScalarFieldEnumSchema,PriceScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const PriceAggregateArgsSchema: z.ZodType<Prisma.PriceAggregateArgs> = z.object({
+  where: PriceWhereInputSchema.optional(),
+  orderBy: z.union([ PriceOrderByWithRelationInputSchema.array(),PriceOrderByWithRelationInputSchema ]).optional(),
+  cursor: PriceWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const PriceGroupByArgsSchema: z.ZodType<Prisma.PriceGroupByArgs> = z.object({
+  where: PriceWhereInputSchema.optional(),
+  orderBy: z.union([ PriceOrderByWithAggregationInputSchema.array(),PriceOrderByWithAggregationInputSchema ]).optional(),
+  by: PriceScalarFieldEnumSchema.array(),
+  having: PriceScalarWhereWithAggregatesInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const PriceFindUniqueArgsSchema: z.ZodType<Prisma.PriceFindUniqueArgs> = z.object({
+  select: PriceSelectSchema.optional(),
+  include: PriceIncludeSchema.optional(),
+  where: PriceWhereUniqueInputSchema,
+}).strict() ;
+
+export const PriceFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.PriceFindUniqueOrThrowArgs> = z.object({
+  select: PriceSelectSchema.optional(),
+  include: PriceIncludeSchema.optional(),
+  where: PriceWhereUniqueInputSchema,
+}).strict() ;
+
 export const UserCreateArgsSchema: z.ZodType<Prisma.UserCreateArgs> = z.object({
   select: UserSelectSchema.optional(),
   include: UserIncludeSchema.optional(),
@@ -2794,5 +3253,47 @@ export const MarketListItemUpdateManyArgsSchema: z.ZodType<Prisma.MarketListItem
 
 export const MarketListItemDeleteManyArgsSchema: z.ZodType<Prisma.MarketListItemDeleteManyArgs> = z.object({
   where: MarketListItemWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const PriceCreateArgsSchema: z.ZodType<Prisma.PriceCreateArgs> = z.object({
+  select: PriceSelectSchema.optional(),
+  include: PriceIncludeSchema.optional(),
+  data: z.union([ PriceCreateInputSchema,PriceUncheckedCreateInputSchema ]),
+}).strict() ;
+
+export const PriceUpsertArgsSchema: z.ZodType<Prisma.PriceUpsertArgs> = z.object({
+  select: PriceSelectSchema.optional(),
+  include: PriceIncludeSchema.optional(),
+  where: PriceWhereUniqueInputSchema,
+  create: z.union([ PriceCreateInputSchema,PriceUncheckedCreateInputSchema ]),
+  update: z.union([ PriceUpdateInputSchema,PriceUncheckedUpdateInputSchema ]),
+}).strict() ;
+
+export const PriceCreateManyArgsSchema: z.ZodType<Prisma.PriceCreateManyArgs> = z.object({
+  data: z.union([ PriceCreateManyInputSchema,PriceCreateManyInputSchema.array() ]),
+}).strict() ;
+
+export const PriceDeleteArgsSchema: z.ZodType<Prisma.PriceDeleteArgs> = z.object({
+  select: PriceSelectSchema.optional(),
+  include: PriceIncludeSchema.optional(),
+  where: PriceWhereUniqueInputSchema,
+}).strict() ;
+
+export const PriceUpdateArgsSchema: z.ZodType<Prisma.PriceUpdateArgs> = z.object({
+  select: PriceSelectSchema.optional(),
+  include: PriceIncludeSchema.optional(),
+  data: z.union([ PriceUpdateInputSchema,PriceUncheckedUpdateInputSchema ]),
+  where: PriceWhereUniqueInputSchema,
+}).strict() ;
+
+export const PriceUpdateManyArgsSchema: z.ZodType<Prisma.PriceUpdateManyArgs> = z.object({
+  data: z.union([ PriceUpdateManyMutationInputSchema,PriceUncheckedUpdateManyInputSchema ]),
+  where: PriceWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const PriceDeleteManyArgsSchema: z.ZodType<Prisma.PriceDeleteManyArgs> = z.object({
+  where: PriceWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;

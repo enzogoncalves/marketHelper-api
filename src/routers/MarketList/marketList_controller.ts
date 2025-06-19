@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { MarketListSchema } from "../../../prisma/generated/zod";
+import { MarketListItemSchema, MarketListSchema, PriceSchema } from "../../../prisma/generated/zod";
 import z from "zod";
 import { createListInput, deleteListInput, deleteListResponseType, deleteMarketListItemInput, getMarketListInput, getMarketListItemsType } from "./marketList_router";
 import { PrismaClient } from "@prisma/client";
@@ -71,23 +71,53 @@ export const marketListController = {
 				where: {
 					marketListId: marketlist_id,
 				}
-			}).then((items) => {
-				console.log(items)
+			}).then(async (marketListItems) => {
+				console.log(marketListItems)
 
-				if(items == null) return reply.status(404).send({message: 'Items could not be found.'})
+				if(marketListItems == null) return reply.status(404).send({message: 'Items could not be found.'})
 
-				const marketListItems = {
-					marketList: data,
-					items: items 
+				const items: [{
+					marketListItem: z.infer<typeof MarketListItemSchema>,
+					prices: z.infer<typeof PriceSchema>[]
+				}];
+
+				for(const marketListItem of marketListItems) {
+					await prisma.price.findMany({
+						where: {
+							marketListItemId: marketListItem.id,
+						}
+					}).then((prices) => {
+						const item = {
+							marketListItem,
+							prices: prices
+						}
+
+						items.push(item)
+					}).catch((e) => {
+						console.log(e)
+					})
 				}
-				
-				return reply.status(200).send(marketListItems)
 
-			}).catch(e => {
+				const marketList = {
+					marketList: data,
+					items: items!
+				}
+
+				return reply.status(200).send(marketList)
+
+				}).catch((e) => {
+					console.log(e)
+					return reply.status(500).send({message: 'Something went wrong'})
+				})
+
+			}).catch((e) => {
+				console.log(e)
+				console.log('aqui 1')
 				return reply.status(500).send({message: 'Something went wrong! Try again'})
 			})
-		}).catch(e => {
-			return reply.status(500).send({message: 'Something went wrong! Try again'})
+		}).catch((e) => {
+				console.log('aqui 2')
+				return reply.status(500).send({message: 'Something went wrong! Try again'})
 		})
 	},
 

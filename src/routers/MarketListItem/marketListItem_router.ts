@@ -1,17 +1,31 @@
 import z from "zod";
 import { FastifyTypedInstance } from "../../utils/types";
-import { MarketListItemSchema } from "../../../prisma/generated/zod";
+import { MarketListItemSchema, PriceSchema } from "../../../prisma/generated/zod";
 import { marketListItemController } from "./marketListItem_controller";
 import { authMiddleware } from "../../middlewares/auth";
 
 const createListItemSchema = z.object({
 	name: z.string(),
-	price: z.number(),
+	brand: z.string(),
+	prices: z.object({
+		type: z.string(),
+		value: z.number(),
+		unit: z.string()
+	}).array(),
 	quantity: z.number(),
-	marketList_id: z.string()
+	marketList_id: z.string(),
+	currency: z.string(),
+	weight: z.string()
 })
 
 export type createListItemInput = z.infer<typeof createListItemSchema>;
+
+const getListItemResponseSchema = z.object({
+		marketListItem: MarketListItemSchema,
+		prices: PriceSchema.array()
+})
+
+export type getListItemResponseType = z.infer<typeof getListItemResponseSchema>
 
 const getMarketListItemQuery = z.object({
 		marketList_id: z.string(),
@@ -40,10 +54,8 @@ export function marketListItemRouter(app: FastifyTypedInstance) {
 			description: 'Get an item of a market list',
 			querystring: getMarketListItemQuery,
 			response: {
-				200: MarketListItemSchema
+				200: getListItemResponseSchema
 			}
 		}
 	}, marketListItemController.getItem)
-
-
 }
