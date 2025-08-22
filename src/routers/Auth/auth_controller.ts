@@ -1,16 +1,18 @@
 import { PrismaClient } from "@prisma/client";
-import { addDays, addHours, addMinutes, addMonths } from "date-fns";
-import { MailerSend, EmailParams, Sender, Recipient } from "mailersend";
+import { addMinutes, addMonths } from "date-fns";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { SignJWT } from "jose";
+import { EmailParams, MailerSend, Recipient, Sender } from "mailersend";
 
-import { loginUserInput, successLoginUserResponseType, loginUserUnauthorizedResponseType, logoutUserInput, resetPasswordInput } from "./auth_router";
+import { logoutUserInput, resetPasswordInput, signInUserInput, successSignInUserResponseType } from "./auth_router";
 
 import bcrypt from 'bcrypt';
+import { APIGeneralResponseType } from "../../utils/types";
+
 const prisma = new PrismaClient()
 
 export const authController = {
-	signin: async (req: FastifyRequest<{Body: loginUserInput}>, reply: FastifyReply<{Reply: {200: successLoginUserResponseType, 401: loginUserUnauthorizedResponseType, 500: any}, Body: loginUserInput}>) => {
+	signIn: async (req: FastifyRequest<{Body: signInUserInput}>, reply: FastifyReply<{Reply: {200: successSignInUserResponseType, 401: APIGeneralResponseType, 400: any, 500: any}, Body: signInUserInput}>) => {
 		const { email, password } = req.body;
 		
 		const user = await prisma.user.findFirst({
@@ -22,8 +24,42 @@ export const authController = {
 		const authorized = user && (await bcrypt.compare(password, user.password))
 	
 		if(!user || !authorized) {
-			return reply.status(401).send({message: "Invalid email or password"} as loginUserUnauthorizedResponseType)
+			return reply.status(401).send({
+				message: 'Invalid email or password',
+				success: false,
+				error: {
+					statusCode: '401',
+					type: 'AUTH_INVALID_CREDENTIALS'
+				}
+			})
 		}
+
+		const userToken = await prisma.authToken.findFirst({
+			where: {
+				userId: user.uid
+			},
+			select: {
+				token: true,
+				expiresAt: true,
+				createdAt: true,
+			}
+		})
+
+
+		// TODO: Check if the userToken is expired
+		if(userToken) {
+			reply.status(200).send({
+			message: 'User signed in successfully',
+			success: true,
+			data: {
+				authorized: true,
+				token: userToken,
+				userId: user.uid
+			}	
+		})
+		}
+
+
 
 		const date = new Date();
 		const timeToExpiresTokenInHours = 1;
@@ -53,24 +89,28 @@ export const authController = {
 			reply.status(500).send('Unable to create JWT Token')
 		}
 
-		const authorizedUser = await prisma.user.update({
-			where: {
-				uid: user.uid
+		const tokenConnectedToUser = await prisma.authToken.create({
+			data: { 
+				token: jwt!, 
+				createdAt: date, 
+				expiresAt: tokenExpiredDate, 
+				user: {
+					connect: {
+						uid: user.uid
+					}
+				}		
 			},
-			data: {
-				authToken: {
-					create: { token: jwt!, createdAt: date, expiresAt: tokenExpiredDate }
-				}
-			},
-			include: {
-				authToken: true
+			select: {
+				token: true,
+				id: false,
+				expiresAt: true,
+				createdAt: true,
 			}
 		})
 
 		const payload = {
 			uid: user.uid,
 			email: user.email,
-			name: user.name
 		}
 	
 		const token = req.jwt.sign(payload)
@@ -82,9 +122,13 @@ export const authController = {
 		})
 
 		reply.status(200).send({
-			authorized: true,
-			tokenId: authorizedUser.authTokenId!,
-			userId: authorizedUser.uid
+			message: 'User signed in successfully',
+			success: true,
+			data: {
+				authorized: true,
+				token: tokenConnectedToUser,
+				userId: user.uid
+			}	
 		})
 	},
 	
@@ -95,41 +139,22 @@ export const authController = {
 		console.log(`userId: ${userId}`)
 
 		try {
-			const user = await prisma.user.update({
-				where: {
-					authTokenId: authTokenId,
-					uid: userId
-				},
-				data: {
-					authToken: {
-						disconnect: true
-					}
-				},
-				include: {
-					authToken: true
-				}
-			})
-
-			console.log(`user: ${user}`)
-		} catch(e) {
-			console.log('unable to delete authTokenId in user')
-			console.log(e)
-			return reply.status(500).send(e)
-		}
-
-		try {
 			const authToken = await prisma.authToken.delete({
 				where: {
-					id: authTokenId
+					id: authTokenId,
+					userId: userId
 				}
 			})
+
+			console.log(authToken)
+			reply.clearCookie('access_token')
+			return reply.status(200).send({message: 'Logout successful'})
 		} catch(e) {
 			console.log('unable to delete authToken')
 			console.log(e)
 			return reply.status(500).send(e)
 		}
 
-		reply.clearCookie('access_token')
 
 		return reply.send({ message: 'Logout successful '})
 	},

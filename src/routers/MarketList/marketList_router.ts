@@ -1,4 +1,4 @@
-import { MarketListItemSchema, MarketListSchema } from "../../../prisma/generated/zod";
+import { MarketListItemSchema, MarketListSchema, PriceSchema } from "../../../prisma/generated/zod";
 import { authMiddleware } from "../../middlewares/auth";
 import { FastifyTypedInstance } from "../../utils/types";
 import { marketListController } from "./marketList_controller";
@@ -16,11 +16,19 @@ const getListSchema = z.object({
 
 export type getMarketListInput = z.infer<typeof getListSchema>
 
+const marketListItemSchema = z.object({
+	marketListItem: MarketListItemSchema.omit({
+		marketListId: true,
+	}),
+	prices: PriceSchema.omit({
+		marketListItemId: true,
+}).array()})
+
+export type marketListItemType = z.infer<typeof marketListItemSchema>
+
 const getMarketListItemsSchema = z.object({
 	marketList: MarketListSchema,
-	items: MarketListItemSchema.omit({
-		marketListId: true
-	}).array()
+	items: marketListItemSchema.array()
 })
 
 export type getMarketListItemsType = z.infer<typeof getMarketListItemsSchema>

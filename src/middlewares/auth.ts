@@ -2,28 +2,35 @@ import { PrismaClient } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { JWTInvalid } from "jose/errors";
 import { jwtVerify } from "jose/jwt/verify"
+import { z } from "zod";
 const prisma = new PrismaClient()
 
-export const authMiddleware = async (req: FastifyRequest<{Body: any, Params: any}>, reply: FastifyReply) => {
-	const { headers: { auth_token_id = '', user_id } } = req;
+export const tokenResponseSchema = z.object({
+	authorized: z.boolean(),
+	message: z.string()
+})
 
-	await prisma.user.findFirst({
+export type tokenResponseType = z.infer<typeof tokenResponseSchema>
+
+export const authMiddleware = async (req: FastifyRequest<{Body: any, Params: any, Reply: any}>, reply: FastifyReply<{Reply: {401: tokenResponseType}}>) => {
+	const { headers: { auth_token = '', user_id } } = req;
+
+	await prisma.authToken.findFirst({
 		where: {
-			uid: user_id as string,
-			authTokenId: auth_token_id as string
+			token: auth_token as string,
+			userId: user_id as string,
 		},
 		select: {
-			authToken: {
-				select: {
-					token: true
-				}
-			}
+			token: true
 		}
 	})
 	.then(async (data) => {
 		if(!data) {
 			console.log('não encontrado')
-			return reply.status(401).send({message: 'Unauthorized Token'})
+			return reply.status(401).send({
+				authorized: false,
+				message: 'Token not found'
+			})
 		}
 
 		const secret = new TextEncoder().encode(process.env.JWT_SECRET_KEY)
@@ -31,7 +38,7 @@ export const authMiddleware = async (req: FastifyRequest<{Body: any, Params: any
 		// if(data?.authToken!.token == null)
 
 		try {
-			const { payload, protectedHeader } = await jwtVerify(data!.authToken!.token, secret, {
+			const { payload, protectedHeader } = await jwtVerify(data!.token, secret, {
 				issuer: 'urn:example:issuer',
 				audience: 'urn:example:audience'
 			})
@@ -47,14 +54,23 @@ export const authMiddleware = async (req: FastifyRequest<{Body: any, Params: any
 
 			switch(error.code) {
 				case 'ERR_JWT_EXPIRED':
-					return reply.status(401).send({message: 'Expired Token'});
+					return reply.status(401).send({
+						authorized: false,
+						message: 'Token expired'
+					});
 				default: 
-					return reply.status(401).send({message: 'Unauthorized Token'});
+					return reply.status(401).send({
+						authorized: false,
+						message: 'Invalid token'
+					});
 			}
 		}
 	})
 	.catch((e) => {
 		console.log(e)
-		return reply.status(401).send({message: 'Unable to find user token'})
+		return reply.status(401).send({
+			authorized: false,
+			message: 'Something went wrong while verifying the token'
+		})
 	})
 }

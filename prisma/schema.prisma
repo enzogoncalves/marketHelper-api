@@ -21,14 +21,9 @@ model User {
   uid                String       @id @default(auto()) @map("_id") @db.ObjectId
   email              String       @unique
   password           String
-  name               String
-  age                Int
-  profile_picture    String
   created_at         DateTime     @default(now())
   updated_at         DateTime
-  authToken          AuthToken?   @relation(fields: [authTokenId], references: [id])
-  authTokenId        String?      @unique @db.ObjectId
-  task               Task[]
+  authToken          AuthToken?
   passwordResetToken String?
   marketLists        MarketList[]
 }
@@ -38,19 +33,8 @@ model AuthToken {
   token     String   @unique
   createdAt DateTime
   expiresAt DateTime
-  User      User?
-}
-
-model Task {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  text        String
-  completed   Boolean
-  createdAt   DateTime
-  completedAt DateTime?
-  priority    String
-  User        User?     @relation(fields: [userUid], references: [uid])
-  userUid     String?   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [uid])
+  userId    String   @unique @db.ObjectId
 }
 
 model MarketList {

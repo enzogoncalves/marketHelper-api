@@ -1,28 +1,29 @@
 import z from 'zod';
-import { FastifyTypedInstance } from "../../utils/types";
+import { FastifyTypedInstance, APIGeneralResponseSchemaFunction } from "../../utils/types";
 import { authController } from "./auth_controller";
 import { authMiddleware } from "../../middlewares/auth";
+import { AuthTokenSchema } from "../../../prisma/generated/zod";
+import { PrismaClient } from "@prisma/client";
 
-const loginUserSchema = z.object({
+const signInUserSchema = z.object({
 	email: z.string().email(),
 	password: z.string()
 })
 
-export type loginUserInput = z.infer<typeof loginUserSchema>
+const prisma = new PrismaClient()
 
-const successLoginUserResponse = z.object({
+export type signInUserInput = z.infer<typeof signInUserSchema>
+
+const successSignInUserResponse = APIGeneralResponseSchemaFunction(z.object({
 	authorized: z.boolean(),
 	userId: z.string(),
-	tokenId: z.string()
-})
+	token: AuthTokenSchema.omit({
+		id: true,
+		userId: true
+	})
+}))
 
-export type successLoginUserResponseType = z.infer<typeof successLoginUserResponse>
-
-const loginUserUnauthorizedResponseSchema = z.object({
-	message: z.enum(['Invalid email or password'])
-})
-
-export type loginUserUnauthorizedResponseType = z.infer<typeof loginUserUnauthorizedResponseSchema>
+export type successSignInUserResponseType = z.infer<typeof successSignInUserResponse>
 
 const logoutUserSchema = z.object({
 	authTokenId: z.string(),
@@ -38,17 +39,17 @@ const resetPasswordSchema = z.object({
 export type resetPasswordInput = z.infer<typeof resetPasswordSchema>
 
 export async function authRouter(app: FastifyTypedInstance) {
-	app.post('/signin', {
+	app.post('/signIn', {
 		schema: {
 			tags: ['auth'],
-			description: 'Login a user',
-			body: loginUserSchema,
+			description: 'SignIn a user',
+			body: signInUserSchema,
 			response: {
-				200: successLoginUserResponse,
-				401: loginUserUnauthorizedResponseSchema
+				200: successSignInUserResponse,
+				401: APIGeneralResponseSchemaFunction(z.null())
 			},
 		}
-	}, authController.signin)
+	}, authController.signIn)
 
 	app.delete('/signout', {
 		preHandler: [app.authenticate],
@@ -68,7 +69,22 @@ export async function authRouter(app: FastifyTypedInstance) {
 		schema: {
 			description: 'Reset password (send email to reset the password)',
 			tags: ['auth'],
-			body: resetPasswordSchema
+			body: resetPasswordSchema,
 		}
 	}, authController.sendPasswordResetLinkInEmail)
+
+	app.post('/delete', {
+		schema: {
+			tags: ['app'],
+			description: 'Delete all the database data'
+		}
+	}, async (req, reply) => {
+		await prisma.authToken.deleteMany({})
+		await prisma.user.deleteMany({})
+		await prisma.price.deleteMany({})
+		await prisma.marketListItem.deleteMany({})
+		await prisma.marketList.deleteMany({})
+		
+		reply.send('all deleted')
+	})
 }

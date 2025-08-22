@@ -1,16 +1,19 @@
 
+import { PrismaClient } from "@prisma/client";
+import bcrypt from 'bcrypt';
 import { FastifyReply, FastifyRequest } from "fastify";
-import { Prisma, PrismaClient } from "@prisma/client";
 import { CreateUserInput } from "./users_router";
-import { addHours } from "date-fns";
-import { SignJWT } from "jose"
-import bcrypt from 'bcrypt'
+import { APIGeneralResponseSchema, APIGeneralResponseType } from "../../utils/types";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+	log: ['query', 'info', 'warn', 'error']
+});
 
 export const usersController = {
-	register: async (req: FastifyRequest<{Body: CreateUserInput}>, reply: FastifyReply) => {
-		const { name, email, age, profile_picture, password } = req.body
+	register: async (req: FastifyRequest<{Body: CreateUserInput, Reply: any}>, reply: FastifyReply<{Reply: {201: APIGeneralResponseType, 401: APIGeneralResponseType, 500: APIGeneralResponseType}}>) => {
+		const { email, password } = req.body
+
+		console.log(`email: ${email}, password: ${password}`)
 
 		const user = await prisma.user.findUnique({
 			where: {
@@ -19,37 +22,62 @@ export const usersController = {
 		})
 
 		if(user) {
-			return reply.code(401).send({
-				message: 'User already exists with this email'
-			})
+			return reply.code(401).send(
+				{
+					message: 'You cannot register with this email, it is already in use',
+					success: false,
+					data: null,
+					error: {
+						statusCode: 'USER_ALREADY_EXISTS',
+						type: 'User Registration Error'
+					}
+				}
+			)
 		}
 
 		try {
 			const passwordSalt = await bcrypt.genSalt()
 			const hashedPassword = await bcrypt.hash(password, passwordSalt)
 		
-			const user = await prisma.user.create({
+			await prisma.user.create({
 				data: {
-					name,
-					age,
 					email,
-					profile_picture,
 					password: hashedPassword,
 					updated_at: new Date(),
-				},
-				select: {
-					uid: true,
-					name: true,
-					age: true,
-					email: true,
-					profile_picture: true,
-					password: true,
-					updated_at: true,
-					created_at: true
 				}
+			}).then((user) => {
+				if(user) {
+					return reply.status(201).send({
+						message: 'User created successfully',
+						success: true,
+						data: null,
+					})
+				}
+			}).catch((e) => {
+				return reply.status(500).send(
+					{
+						message: 'An error occurred while trying to register the user. Please try again later.',
+						success: false,
+						data: null,
+						error: {
+							statusCode: 'SERVER_ERROR',
+							type: 'User Registration Error'
+						}
+				}
+				)	
 			})
 		} catch(e) {
-			return reply.code(500).send(e)
+			return reply.code(500).send(
+				{
+					message: 'An error occurred while trying to register the user. Please try again later.',
+					success: false,
+					data: null,
+					error: {
+						statusCode: 'SERVER_ERROR',
+						type: 'User Registration Error'
+					}
+				}
+			)
 		}
 	}
 }

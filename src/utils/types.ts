@@ -1,6 +1,7 @@
 import { JWT } from "@fastify/jwt";
 import { FastifyBaseLogger, FastifyInstance, RawReplyDefaultExpression, RawRequestDefaultExpression, RawServerDefault } from "fastify";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
+import { z } from "zod";
 
 export type FastifyTypedInstance = FastifyInstance<
 	RawServerDefault,
@@ -30,3 +31,19 @@ declare module '@fastify/jwt' {
 		user: UserPayload
 	}
 }
+
+export function APIGeneralResponseSchemaFunction<DataType extends z.ZodTypeAny>(dataSchema: DataType) {
+	return z.object({
+		message: z.string(),
+		success: z.boolean(),
+		error: z.object({
+			statusCode: z.string(),
+			type: z.string(),
+		}).optional(),
+		data: dataSchema.optional()
+	});
+}
+
+export const APIGeneralResponseSchema = APIGeneralResponseSchemaFunction(z.null());
+
+export type APIGeneralResponseType = z.infer<typeof APIGeneralResponseSchema>;

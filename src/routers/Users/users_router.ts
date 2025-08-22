@@ -1,17 +1,14 @@
 import { PrismaClient } from "@prisma/client";
-import z from 'zod';
+import z, { any } from 'zod';
 import { UserSchema } from "../../../prisma/generated/zod";
-import { FastifyTypedInstance } from "../../utils/types";
-import { usersController } from "./users_controller";
 import { authMiddleware } from "../../middlewares/auth";
+import { FastifyTypedInstance, APIGeneralResponseSchema } from "../../utils/types";
+import { usersController } from "./users_controller";
 
 const prisma = new PrismaClient()
 
 const createUserSchema = z.object({
-	name: z.string(),
 	email: z.string().email(),
-	age: z.number(),
-	profile_picture: z.string(),
 	password: z.string()
 })
 
@@ -23,20 +20,15 @@ export async function usersRouter(app: FastifyTypedInstance) {
 		schema: {
 			tags: ['users'],
 			description: 'List users',
-			response: {200: z.array(UserSchema.omit({passwordResetToken: true}))}
+			response: {200: z.array(UserSchema.omit({passwordResetToken: true, password: true, }))}
 		}
 	}, async (req, reply) => {
 		const users = await prisma.user.findMany({	
 			select: {
 				uid: true,
-				name: true,
-				age: true,
 				email: true,
-				profile_picture: true,
-				password: true,
 				updated_at: true,
 				created_at: true,
-				authTokenId: true
 			}
 		})
 
@@ -49,7 +41,9 @@ export async function usersRouter(app: FastifyTypedInstance) {
 			description: 'Register a new user',
 			body: createUserSchema,
 			response: {
-				201: UserSchema
+				201: APIGeneralResponseSchema,
+				401: APIGeneralResponseSchema,
+				500: APIGeneralResponseSchema,
 			}
 		}
 	},  usersController.register)

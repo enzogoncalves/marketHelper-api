@@ -1,14 +1,14 @@
-import { FastifyReply, FastifyRequest } from "fastify";
-import { MarketListItemSchema, MarketListSchema, PriceSchema } from "../../../prisma/generated/zod";
-import z from "zod";
-import { createListInput, deleteListInput, deleteListResponseType, deleteMarketListItemInput, getMarketListInput, getMarketListItemsType } from "./marketList_router";
 import { PrismaClient } from "@prisma/client";
+import { FastifyReply, FastifyRequest } from "fastify";
+import z from "zod";
+import { MarketListSchema } from "../../../prisma/generated/zod";
+import { createListInput, deleteListInput, deleteListResponseType, deleteMarketListItemInput, getMarketListInput, getMarketListItemsType, marketListItemType } from "./marketList_router";
 
 type marketListType = z.infer<typeof MarketListSchema>
 const prisma = new PrismaClient()
 
 export const marketListController = {
-	createList: async (req: FastifyRequest<{Body: createListInput, Params: any, Reply: any}>, reply: FastifyReply<{Body: createListInput, Reply: {200: marketListType, 401: {message: String}, 500: {message: String}}}>) => {
+	createList: async (req: FastifyRequest<{Body: createListInput, Params: any, Reply: any}>, reply: FastifyReply<{Body: createListInput, Reply: {200: any, 401: {message: String}, 500: {message: String}}}>) => {
 		const { title } = req.body
 		const { headers: { user_id } } = req
 
@@ -42,9 +42,7 @@ export const marketListController = {
 				id: marketlist_id,
 				userUid: user_id as string
 			}
-		}).then((data) => {	
-			console.log(data)
-			
+		}).then((data) => {
 			if(data == null) return reply.status(404).send({message: 'This list could not be found.'})
 
 			return reply.status(200).send(data!)
@@ -63,36 +61,34 @@ export const marketListController = {
 				userUid: user_id as string
 			}
 		}).then(async (data) => {	
-			console.log(data)
-			
 			if(data == null) return reply.status(404).send({message: 'This list could not be found.'})
 
 			await prisma.marketListItem.findMany({
 				where: {
 					marketListId: marketlist_id,
+				},
+				omit: {
+					marketListId: true
 				}
-			}).then(async (marketListItems) => {
-				console.log(marketListItems)
+			}).then(async (marketListItemsWithoutPrice) => {
+				if(marketListItemsWithoutPrice == null) return reply.status(404).send({message: 'Items could not be found.'})
 
-				if(marketListItems == null) return reply.status(404).send({message: 'Items could not be found.'})
+				const marketListItems: Array<marketListItemType> = []
 
-				const items: [{
-					marketListItem: z.infer<typeof MarketListItemSchema>,
-					prices: z.infer<typeof PriceSchema>[]
-				}];
-
-				for(const marketListItem of marketListItems) {
+				for(const marketListItemWithoutPrice of marketListItemsWithoutPrice) {
 					await prisma.price.findMany({
 						where: {
-							marketListItemId: marketListItem.id,
+							marketListItemId: marketListItemWithoutPrice.id,
+						},omit: {
+							marketListItemId: true
 						}
 					}).then((prices) => {
 						const item = {
-							marketListItem,
+							marketListItem: marketListItemWithoutPrice,
 							prices: prices
 						}
 
-						items.push(item)
+						marketListItems.push(item)
 					}).catch((e) => {
 						console.log(e)
 					})
@@ -100,7 +96,7 @@ export const marketListController = {
 
 				const marketList = {
 					marketList: data,
-					items: items!
+					items: marketListItems!
 				}
 
 				return reply.status(200).send(marketList)
@@ -109,12 +105,6 @@ export const marketListController = {
 					console.log(e)
 					return reply.status(500).send({message: 'Something went wrong'})
 				})
-
-			}).catch((e) => {
-				console.log(e)
-				console.log('aqui 1')
-				return reply.status(500).send({message: 'Something went wrong! Try again'})
-			})
 		}).catch((e) => {
 				console.log('aqui 2')
 				return reply.status(500).send({message: 'Something went wrong! Try again'})
@@ -125,16 +115,37 @@ export const marketListController = {
 		const { marketList_id } = req.body
 		const { headers: { user_uid } } = req
 
-		await prisma.marketList.delete({
-			where: {
-				id: marketList_id,
-				userUid: user_uid as string
-			}
-		}).then((data) => {
+		await Promise.all([
+			await prisma.price.deleteMany({
+				where: {
+					MarketListItem: {
+						marketListId: marketList_id
+					}
+				}
+			}),
+			await prisma.marketListItem.deleteMany({
+				where: {
+					marketListId: marketList_id
+				}
+			}),
+			await prisma.marketList.delete({
+				where: {
+					id: marketList_id,
+					userUid: user_uid as string
+				}
+			}),
+		]).then((data) => {
 			console.log(data)
-			return reply.status(200).send({deleted: true, message: 'Successfully deleted the list'})
-		}).catch(e => {
-			return reply.status(500).send({deleted: false, message: 'Something went wrong! Try again'})
+			return reply.status(200).send({
+				deleted: true,
+				message: 'List deleted successfully'
+			})
+		}).catch((e) => {
+			console.log(e)
+			return reply.status(500).send({
+				deleted: false,
+				message: 'Something went wrong'
+			})
 		})
 	},
 
@@ -148,28 +159,36 @@ export const marketListController = {
 				userUid: user_id as string
 			}
 		}).then( async(data) => {	
-			console.log(data)
-			console.log(marketList_id)
-
 			if(data == null) return reply.status(404).send({message: 'This list could not be found.'})
 
-			console.log(marketListItem_id)
-			
-			await prisma.marketListItem.delete({
+			await prisma.price.deleteMany({
+				where: {
+					marketListItemId: marketListItem_id
+				}
+			}).then(async (prices) => {
+				console.log(prices)
+
+				await prisma.marketListItem.delete({
 				where: {
 					id: marketListItem_id
 				}
-			}).then((marketListItem) => {
-				console.log(marketListItem)
-				return reply.status(200).send()
-			}).catch((e) => {
-				console.log(e)
-				return reply.status(500).send({message: 'Something went wrong'})
+					}).then((marketListItem) => {
+						return reply.status(200).send({message: 'Item deleted successfully', item: marketListItem})
+					}).catch((e) => {
+						if(e.meta.cause === "No record was found for a delete.") {
+							return reply.status(404).send({message: 'No record was found for a delete.'})
+						}
+						return reply.status(500).send({message: 'Something went wrong 1'})
+					})
+			}).catch(e => {
+				if(e.meta.cause === "No record was found for a delete.") {
+					return reply.status(404).send({message: 'No price data was found for a delete.'})
+				}
+				return reply.status(500).send({message: 'Something went wrong 1'})
 			})
-			
 		}).catch(e => {
 			console.log(e)
-			return reply.status(500).send({message: 'Something went wrong'})
+			return reply.status(500).send({message: 'Something went wrong 2'})
 		})
 	}
 }
