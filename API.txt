@@ -1,0 +1,36 @@
+API
+
+auth/
+	post /signIn  -> Sign In an user
+	post /signout -> Signout an user
+	post /reset-password -> Send email to reset the password
+
+marketList/
+	post / -> create a market list
+	get /:marketList_id -> gets the data of a single market list
+	get /:marketList_id/items -> gets the data of a single market list and his items
+	delete /deleteList -> delete a market list and his entire data
+	delete /deleteItem -> deelete an item of a market list
+
+marketListItem/
+	post / -> add an item to a market list
+	get / -> get an item of a market list
+
+user/
+	post / -> get user data
+
+users/
+	get / -> list all users
+	get /:userId -> get user data
+	post / -> register a new user
+
+TODO's:
+	- error.type organization (create a file to separate differents error.statusCode and error.type)
+	- load balancer nginx
+	- what happens if the token is expired
+	- singleton instance of Prisma
+	- remove userId from the req.body
+	- change the authenticate method through decorator
+
+	src/plugins/auth.ts
+

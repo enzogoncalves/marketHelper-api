@@ -2,13 +2,14 @@ import { PrismaClient } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
 import { MarketListSchema } from "../../../prisma/generated/zod";
-import { createListInput, deleteListInput, deleteListResponseType, deleteMarketListItemInput, getMarketListInput, getMarketListItemsType, marketListItemType } from "./marketList_router";
+import { createListInput, createMarketListResponseType, deleteListInput, deleteListResponseType, deleteMarketListItemInput, getMarketListInput, getMarketListItemsType, marketListItemType } from "./marketList_router";
+import { APIGeneralResponseType } from "../../utils/types";
 
 type marketListType = z.infer<typeof MarketListSchema>
 const prisma = new PrismaClient()
 
 export const marketListController = {
-	createList: async (req: FastifyRequest<{Body: createListInput, Params: any, Reply: any}>, reply: FastifyReply<{Body: createListInput, Reply: {200: any, 401: {message: String}, 500: {message: String}}}>) => {
+	createList: async (req: FastifyRequest<{Body: createListInput, Params: any, Reply: any}>, reply: FastifyReply<{Body: createListInput, Reply: {200: createMarketListResponseType, 401: APIGeneralResponseType, 500: APIGeneralResponseType}}>) => {
 		const { title } = req.body
 		const { headers: { user_id } } = req
 
@@ -23,13 +24,17 @@ export const marketListController = {
 			},
 			include: {
 				User: true
-			}
+			},
 		})
 		.then((marketList) => {
-			return reply.status(200).send(marketList)
+			return reply.status(200).send({
+				success: true,
+				message: 'List created successfully',
+				data: marketList
+			})
 		})	
 		.catch((e) => {
-			return reply.status(500).send({message: 'Something went wrong'})
+			return reply.status(500).send({success: false, error: {statusCode: 'DB_ERROR', type: 'Market List Error'}, message: 'Cannot create list. Try again later'})
 		})
 	},
 

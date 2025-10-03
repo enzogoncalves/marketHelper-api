@@ -14,9 +14,27 @@ const createUserSchema = z.object({
 
 export type CreateUserInput = z.infer<typeof createUserSchema>
 
+const getUserSchema = z.object({
+	userId: z.string()
+})
+
+export type getUserInput = z.infer<typeof getUserSchema>
+
 export async function usersRouter(app: FastifyTypedInstance) {
+	app.post('/', {
+		schema: {
+			tags: ['users'],
+			description: 'Register a new user',
+			body: createUserSchema,
+			response: {
+				201: APIGeneralResponseSchema,
+				401: APIGeneralResponseSchema,
+				500: APIGeneralResponseSchema,
+			}
+		}
+	},  usersController.register)
+
 	app.get('/', {
-		preHandler: [authMiddleware],
 		schema: {
 			tags: ['users'],
 			description: 'List users',
@@ -35,18 +53,14 @@ export async function usersRouter(app: FastifyTypedInstance) {
 		reply.code(200).send(users)
 	})
 
-	app.post('/', {
-		schema: {
-			tags: ['users'],
-			description: 'Register a new user',
-			body: createUserSchema,
-			response: {
-				201: APIGeneralResponseSchema,
-				401: APIGeneralResponseSchema,
-				500: APIGeneralResponseSchema,
+	app.get('/:userId', {
+			preHandler: [authMiddleware],
+			schema: {
+				tags: ['user'],
+				description: 'Get user data',
+				
 			}
-		}
-	},  usersController.register)
+		}, usersController.getUser)
 
 	// app.post('/delete', {
 	// 	schema: {

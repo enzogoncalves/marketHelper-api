@@ -3,21 +3,30 @@ import { addMinutes, addMonths } from "date-fns";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { SignJWT } from "jose";
 import { EmailParams, MailerSend, Recipient, Sender } from "mailersend";
+import { JWTInvalid } from "jose/errors";
+import { jwtVerify } from "jose/jwt/verify"
 
 import { logoutUserInput, resetPasswordInput, signInUserInput, successSignInUserResponseType } from "./auth_router";
 
 import bcrypt from 'bcrypt';
 import { APIGeneralResponseType } from "../../utils/types";
+import { z } from "zod";
+import { UserSchema } from "../../../prisma/generated/zod";
 
 const prisma = new PrismaClient()
 
 export const authController = {
 	signIn: async (req: FastifyRequest<{Body: signInUserInput}>, reply: FastifyReply<{Reply: {200: successSignInUserResponseType, 401: APIGeneralResponseType, 400: any, 500: any}, Body: signInUserInput}>) => {
 		const { email, password } = req.body;
+		console.log(req.jwt)
 		
 		const user = await prisma.user.findFirst({
 			where: {
 				email: email
+			}, select: {
+				password: true,
+				uid: true,
+				email: true,
 			}
 		})
 		
@@ -45,18 +54,46 @@ export const authController = {
 			}
 		})
 
+		const secret = new TextEncoder().encode(process.env.JWT_SECRET_KEY)
 
-		// TODO: Check if the userToken is expired
+		try {
+			const { payload, protectedHeader } = await jwtVerify(userToken!.token, secret, {
+				issuer: 'urn:example:issuer',
+				audience: 'urn:example:audience'
+			})
+		} catch(e) {
+			console.log(e)
+			const error = e as JWTInvalid
+
+			switch(error.code) {
+				case 'ERR_JWT_EXPIRED':
+					// TODO: what happens if the token is expired:
+					
+				default: 
+					return reply.status(401).send({
+						success: false,
+						error: {
+							statusCode: '401',
+							type: 'AUTH_INVALID_CREDENTIALS',
+						},
+						message: 'Invalid token'
+					});
+			}
+		}
+
 		if(userToken) {
 			reply.status(200).send({
-			message: 'User signed in successfully',
-			success: true,
-			data: {
-				authorized: true,
-				token: userToken,
-				userId: user.uid
-			}	
-		})
+				message: 'User signed in successfully',
+				success: true,
+				data: {
+					authorized: true,
+					token: userToken,
+					user: {
+						email: user.email,
+						uid: user.uid
+					}
+				}	
+			})
 		}
 
 
@@ -127,7 +164,10 @@ export const authController = {
 			data: {
 				authorized: true,
 				token: tokenConnectedToUser,
-				userId: user.uid
+				user: {
+					email: user.email,
+					uid: user.uid
+				}
 			}	
 		})
 	},

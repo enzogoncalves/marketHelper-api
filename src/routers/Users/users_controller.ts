@@ -2,7 +2,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from 'bcrypt';
 import { FastifyReply, FastifyRequest } from "fastify";
-import { CreateUserInput } from "./users_router";
+import { CreateUserInput, getUserInput } from "./users_router";
 import { APIGeneralResponseSchema, APIGeneralResponseType } from "../../utils/types";
 
 const prisma = new PrismaClient({
@@ -79,5 +79,36 @@ export const usersController = {
 				}
 			)
 		}
+	},
+
+	getUser: async (req: FastifyRequest<{Params: getUserInput}>, reply: FastifyReply) => {
+		const { userId } = req.params;
+
+		console.log('aqui')
+		console.log(userId)
+		
+		await prisma.user.findFirst({
+			where: {
+				uid: userId as string
+			}, select: {
+				uid: true,
+				email: true,
+			}
+		})
+		.then((user) => {
+			if(!user) {
+				return reply.status(500).send('User not found')
+			}
+
+			console.log('aqui2')
+
+			console.log(user)
+
+			return reply.status(200).send(user)
+		})
+		.catch((e) => {
+			console.log(e)
+			return reply.status(500).send('Something went wrong. Try Again!')
+		})
 	}
 }

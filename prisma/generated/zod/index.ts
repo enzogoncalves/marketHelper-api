@@ -14,8 +14,6 @@ export const UserScalarFieldEnumSchema = z.enum(['uid','email','password','creat
 
 export const AuthTokenScalarFieldEnumSchema = z.enum(['id','token','createdAt','expiresAt','userId']);
 
-export const TaskScalarFieldEnumSchema = z.enum(['id','title','text','completed','createdAt','completedAt','priority','userUid']);
-
 export const MarketListScalarFieldEnumSchema = z.enum(['id','title','userUid']);
 
 export const MarketListItemScalarFieldEnumSchema = z.enum(['id','name','quantity','weight','currency','brand','marketListId']);
@@ -57,23 +55,6 @@ export const AuthTokenSchema = z.object({
 })
 
 export type AuthToken = z.infer<typeof AuthTokenSchema>
-
-/////////////////////////////////////////
-// TASK SCHEMA
-/////////////////////////////////////////
-
-export const TaskSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  text: z.string(),
-  completed: z.boolean(),
-  createdAt: z.coerce.date(),
-  completedAt: z.coerce.date().nullable(),
-  priority: z.string(),
-  userUid: z.string().nullable(),
-})
-
-export type Task = z.infer<typeof TaskSchema>
 
 /////////////////////////////////////////
 // MARKET LIST SCHEMA
@@ -137,7 +118,6 @@ export const UserCountOutputTypeArgsSchema: z.ZodType<Prisma.UserCountOutputType
 }).strict();
 
 export const UserCountOutputTypeSelectSchema: z.ZodType<Prisma.UserCountOutputTypeSelect> = z.object({
-  task: z.boolean().optional(),
   marketLists: z.boolean().optional(),
 }).strict();
 
@@ -149,7 +129,6 @@ export const UserSelectSchema: z.ZodType<Prisma.UserSelect> = z.object({
   updated_at: z.boolean().optional(),
   passwordResetToken: z.boolean().optional(),
   authToken: z.union([z.boolean(),z.lazy(() => AuthTokenArgsSchema)]).optional(),
-  task: z.union([z.boolean(),z.lazy(() => TaskArgsSchema)]).optional(),
   marketLists: z.union([z.boolean(),z.lazy(() => MarketListArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => UserCountOutputTypeArgsSchema)]).optional(),
 }).strict()
@@ -172,29 +151,6 @@ export const AuthTokenSelectSchema: z.ZodType<Prisma.AuthTokenSelect> = z.object
   expiresAt: z.boolean().optional(),
   userId: z.boolean().optional(),
   user: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
-}).strict()
-
-// TASK
-//------------------------------------------------------
-
-export const TaskIncludeSchema: z.ZodType<Prisma.TaskInclude> = z.object({
-}).strict()
-
-export const TaskArgsSchema: z.ZodType<Prisma.TaskDefaultArgs> = z.object({
-  select: z.lazy(() => TaskSelectSchema).optional(),
-  include: z.lazy(() => TaskIncludeSchema).optional(),
-}).strict();
-
-export const TaskSelectSchema: z.ZodType<Prisma.TaskSelect> = z.object({
-  id: z.boolean().optional(),
-  title: z.boolean().optional(),
-  text: z.boolean().optional(),
-  completed: z.boolean().optional(),
-  createdAt: z.boolean().optional(),
-  completedAt: z.boolean().optional(),
-  priority: z.boolean().optional(),
-  userUid: z.boolean().optional(),
-  User: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
 }).strict()
 
 // MARKET LIST
@@ -293,7 +249,6 @@ export const UserWhereInputSchema: z.ZodType<Prisma.UserWhereInput> = z.object({
   updated_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   passwordResetToken: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   authToken: z.union([ z.lazy(() => AuthTokenNullableScalarRelationFilterSchema),z.lazy(() => AuthTokenWhereInputSchema) ]).optional().nullable(),
-  task: z.lazy(() => TaskListRelationFilterSchema).optional(),
   marketLists: z.lazy(() => MarketListListRelationFilterSchema).optional()
 }).strict();
 
@@ -305,7 +260,6 @@ export const UserOrderByWithRelationInputSchema: z.ZodType<Prisma.UserOrderByWit
   updated_at: z.lazy(() => SortOrderSchema).optional(),
   passwordResetToken: z.lazy(() => SortOrderSchema).optional(),
   authToken: z.lazy(() => AuthTokenOrderByWithRelationInputSchema).optional(),
-  task: z.lazy(() => TaskOrderByRelationAggregateInputSchema).optional(),
   marketLists: z.lazy(() => MarketListOrderByRelationAggregateInputSchema).optional()
 }).strict();
 
@@ -332,7 +286,6 @@ export const UserWhereUniqueInputSchema: z.ZodType<Prisma.UserWhereUniqueInput> 
   updated_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   passwordResetToken: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   authToken: z.union([ z.lazy(() => AuthTokenNullableScalarRelationFilterSchema),z.lazy(() => AuthTokenWhereInputSchema) ]).optional().nullable(),
-  task: z.lazy(() => TaskListRelationFilterSchema).optional(),
   marketLists: z.lazy(() => MarketListListRelationFilterSchema).optional()
 }).strict());
 
@@ -441,79 +394,6 @@ export const AuthTokenScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Aut
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   expiresAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   userId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-}).strict();
-
-export const TaskWhereInputSchema: z.ZodType<Prisma.TaskWhereInput> = z.object({
-  AND: z.union([ z.lazy(() => TaskWhereInputSchema),z.lazy(() => TaskWhereInputSchema).array() ]).optional(),
-  OR: z.lazy(() => TaskWhereInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => TaskWhereInputSchema),z.lazy(() => TaskWhereInputSchema).array() ]).optional(),
-  id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  title: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  text: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  completed: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
-  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  completedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
-  priority: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  userUid: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
-  User: z.union([ z.lazy(() => UserNullableScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional().nullable(),
-}).strict();
-
-export const TaskOrderByWithRelationInputSchema: z.ZodType<Prisma.TaskOrderByWithRelationInput> = z.object({
-  id: z.lazy(() => SortOrderSchema).optional(),
-  title: z.lazy(() => SortOrderSchema).optional(),
-  text: z.lazy(() => SortOrderSchema).optional(),
-  completed: z.lazy(() => SortOrderSchema).optional(),
-  createdAt: z.lazy(() => SortOrderSchema).optional(),
-  completedAt: z.lazy(() => SortOrderSchema).optional(),
-  priority: z.lazy(() => SortOrderSchema).optional(),
-  userUid: z.lazy(() => SortOrderSchema).optional(),
-  User: z.lazy(() => UserOrderByWithRelationInputSchema).optional()
-}).strict();
-
-export const TaskWhereUniqueInputSchema: z.ZodType<Prisma.TaskWhereUniqueInput> = z.object({
-  id: z.string()
-})
-.and(z.object({
-  id: z.string().optional(),
-  AND: z.union([ z.lazy(() => TaskWhereInputSchema),z.lazy(() => TaskWhereInputSchema).array() ]).optional(),
-  OR: z.lazy(() => TaskWhereInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => TaskWhereInputSchema),z.lazy(() => TaskWhereInputSchema).array() ]).optional(),
-  title: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  text: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  completed: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
-  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  completedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
-  priority: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  userUid: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
-  User: z.union([ z.lazy(() => UserNullableScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional().nullable(),
-}).strict());
-
-export const TaskOrderByWithAggregationInputSchema: z.ZodType<Prisma.TaskOrderByWithAggregationInput> = z.object({
-  id: z.lazy(() => SortOrderSchema).optional(),
-  title: z.lazy(() => SortOrderSchema).optional(),
-  text: z.lazy(() => SortOrderSchema).optional(),
-  completed: z.lazy(() => SortOrderSchema).optional(),
-  createdAt: z.lazy(() => SortOrderSchema).optional(),
-  completedAt: z.lazy(() => SortOrderSchema).optional(),
-  priority: z.lazy(() => SortOrderSchema).optional(),
-  userUid: z.lazy(() => SortOrderSchema).optional(),
-  _count: z.lazy(() => TaskCountOrderByAggregateInputSchema).optional(),
-  _max: z.lazy(() => TaskMaxOrderByAggregateInputSchema).optional(),
-  _min: z.lazy(() => TaskMinOrderByAggregateInputSchema).optional()
-}).strict();
-
-export const TaskScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.TaskScalarWhereWithAggregatesInput> = z.object({
-  AND: z.union([ z.lazy(() => TaskScalarWhereWithAggregatesInputSchema),z.lazy(() => TaskScalarWhereWithAggregatesInputSchema).array() ]).optional(),
-  OR: z.lazy(() => TaskScalarWhereWithAggregatesInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => TaskScalarWhereWithAggregatesInputSchema),z.lazy(() => TaskScalarWhereWithAggregatesInputSchema).array() ]).optional(),
-  id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  title: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  text: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  completed: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
-  createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
-  completedAt: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema),z.coerce.date() ]).optional().nullable(),
-  priority: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  userUid: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
 export const MarketListWhereInputSchema: z.ZodType<Prisma.MarketListWhereInput> = z.object({
@@ -708,7 +588,6 @@ export const UserCreateInputSchema: z.ZodType<Prisma.UserCreateInput> = z.object
   updated_at: z.coerce.date(),
   passwordResetToken: z.string().optional().nullable(),
   authToken: z.lazy(() => AuthTokenCreateNestedOneWithoutUserInputSchema).optional(),
-  task: z.lazy(() => TaskCreateNestedManyWithoutUserInputSchema).optional(),
   marketLists: z.lazy(() => MarketListCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
@@ -720,7 +599,6 @@ export const UserUncheckedCreateInputSchema: z.ZodType<Prisma.UserUncheckedCreat
   updated_at: z.coerce.date(),
   passwordResetToken: z.string().optional().nullable(),
   authToken: z.lazy(() => AuthTokenUncheckedCreateNestedOneWithoutUserInputSchema).optional(),
-  task: z.lazy(() => TaskUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   marketLists: z.lazy(() => MarketListUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
@@ -731,7 +609,6 @@ export const UserUpdateInputSchema: z.ZodType<Prisma.UserUpdateInput> = z.object
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   passwordResetToken: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   authToken: z.lazy(() => AuthTokenUpdateOneWithoutUserNestedInputSchema).optional(),
-  task: z.lazy(() => TaskUpdateManyWithoutUserNestedInputSchema).optional(),
   marketLists: z.lazy(() => MarketListUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
@@ -742,7 +619,6 @@ export const UserUncheckedUpdateInputSchema: z.ZodType<Prisma.UserUncheckedUpdat
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   passwordResetToken: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   authToken: z.lazy(() => AuthTokenUncheckedUpdateOneWithoutUserNestedInputSchema).optional(),
-  task: z.lazy(() => TaskUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   marketLists: z.lazy(() => MarketListUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
@@ -820,78 +696,6 @@ export const AuthTokenUncheckedUpdateManyInputSchema: z.ZodType<Prisma.AuthToken
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   expiresAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-}).strict();
-
-export const TaskCreateInputSchema: z.ZodType<Prisma.TaskCreateInput> = z.object({
-  id: z.string().optional(),
-  title: z.string(),
-  text: z.string(),
-  completed: z.boolean(),
-  createdAt: z.coerce.date(),
-  completedAt: z.coerce.date().optional().nullable(),
-  priority: z.string(),
-  User: z.lazy(() => UserCreateNestedOneWithoutTaskInputSchema).optional()
-}).strict();
-
-export const TaskUncheckedCreateInputSchema: z.ZodType<Prisma.TaskUncheckedCreateInput> = z.object({
-  id: z.string().optional(),
-  title: z.string(),
-  text: z.string(),
-  completed: z.boolean(),
-  createdAt: z.coerce.date(),
-  completedAt: z.coerce.date().optional().nullable(),
-  priority: z.string(),
-  userUid: z.string().optional().nullable()
-}).strict();
-
-export const TaskUpdateInputSchema: z.ZodType<Prisma.TaskUpdateInput> = z.object({
-  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  text: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  completed: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  completedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  priority: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  User: z.lazy(() => UserUpdateOneWithoutTaskNestedInputSchema).optional()
-}).strict();
-
-export const TaskUncheckedUpdateInputSchema: z.ZodType<Prisma.TaskUncheckedUpdateInput> = z.object({
-  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  text: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  completed: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  completedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  priority: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  userUid: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-}).strict();
-
-export const TaskCreateManyInputSchema: z.ZodType<Prisma.TaskCreateManyInput> = z.object({
-  id: z.string().optional(),
-  title: z.string(),
-  text: z.string(),
-  completed: z.boolean(),
-  createdAt: z.coerce.date(),
-  completedAt: z.coerce.date().optional().nullable(),
-  priority: z.string(),
-  userUid: z.string().optional().nullable()
-}).strict();
-
-export const TaskUpdateManyMutationInputSchema: z.ZodType<Prisma.TaskUpdateManyMutationInput> = z.object({
-  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  text: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  completed: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  completedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  priority: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-}).strict();
-
-export const TaskUncheckedUpdateManyInputSchema: z.ZodType<Prisma.TaskUncheckedUpdateManyInput> = z.object({
-  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  text: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  completed: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  completedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  priority: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  userUid: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const MarketListCreateInputSchema: z.ZodType<Prisma.MarketListCreateInput> = z.object({
@@ -1102,20 +906,10 @@ export const AuthTokenNullableScalarRelationFilterSchema: z.ZodType<Prisma.AuthT
   isNot: z.lazy(() => AuthTokenWhereInputSchema).optional().nullable()
 }).strict();
 
-export const TaskListRelationFilterSchema: z.ZodType<Prisma.TaskListRelationFilter> = z.object({
-  every: z.lazy(() => TaskWhereInputSchema).optional(),
-  some: z.lazy(() => TaskWhereInputSchema).optional(),
-  none: z.lazy(() => TaskWhereInputSchema).optional()
-}).strict();
-
 export const MarketListListRelationFilterSchema: z.ZodType<Prisma.MarketListListRelationFilter> = z.object({
   every: z.lazy(() => MarketListWhereInputSchema).optional(),
   some: z.lazy(() => MarketListWhereInputSchema).optional(),
   none: z.lazy(() => MarketListWhereInputSchema).optional()
-}).strict();
-
-export const TaskOrderByRelationAggregateInputSchema: z.ZodType<Prisma.TaskOrderByRelationAggregateInput> = z.object({
-  _count: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const MarketListOrderByRelationAggregateInputSchema: z.ZodType<Prisma.MarketListOrderByRelationAggregateInput> = z.object({
@@ -1229,88 +1023,15 @@ export const AuthTokenMinOrderByAggregateInputSchema: z.ZodType<Prisma.AuthToken
   userId: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
-export const BoolFilterSchema: z.ZodType<Prisma.BoolFilter> = z.object({
-  equals: z.boolean().optional(),
-  not: z.union([ z.boolean(),z.lazy(() => NestedBoolFilterSchema) ]).optional(),
-}).strict();
-
-export const DateTimeNullableFilterSchema: z.ZodType<Prisma.DateTimeNullableFilter> = z.object({
-  equals: z.coerce.date().optional().nullable(),
-  in: z.coerce.date().array().optional().nullable(),
-  notIn: z.coerce.date().array().optional().nullable(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableFilterSchema) ]).optional().nullable(),
-  isSet: z.boolean().optional()
+export const MarketListItemListRelationFilterSchema: z.ZodType<Prisma.MarketListItemListRelationFilter> = z.object({
+  every: z.lazy(() => MarketListItemWhereInputSchema).optional(),
+  some: z.lazy(() => MarketListItemWhereInputSchema).optional(),
+  none: z.lazy(() => MarketListItemWhereInputSchema).optional()
 }).strict();
 
 export const UserNullableScalarRelationFilterSchema: z.ZodType<Prisma.UserNullableScalarRelationFilter> = z.object({
   is: z.lazy(() => UserWhereInputSchema).optional().nullable(),
   isNot: z.lazy(() => UserWhereInputSchema).optional().nullable()
-}).strict();
-
-export const TaskCountOrderByAggregateInputSchema: z.ZodType<Prisma.TaskCountOrderByAggregateInput> = z.object({
-  id: z.lazy(() => SortOrderSchema).optional(),
-  title: z.lazy(() => SortOrderSchema).optional(),
-  text: z.lazy(() => SortOrderSchema).optional(),
-  completed: z.lazy(() => SortOrderSchema).optional(),
-  createdAt: z.lazy(() => SortOrderSchema).optional(),
-  completedAt: z.lazy(() => SortOrderSchema).optional(),
-  priority: z.lazy(() => SortOrderSchema).optional(),
-  userUid: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
-export const TaskMaxOrderByAggregateInputSchema: z.ZodType<Prisma.TaskMaxOrderByAggregateInput> = z.object({
-  id: z.lazy(() => SortOrderSchema).optional(),
-  title: z.lazy(() => SortOrderSchema).optional(),
-  text: z.lazy(() => SortOrderSchema).optional(),
-  completed: z.lazy(() => SortOrderSchema).optional(),
-  createdAt: z.lazy(() => SortOrderSchema).optional(),
-  completedAt: z.lazy(() => SortOrderSchema).optional(),
-  priority: z.lazy(() => SortOrderSchema).optional(),
-  userUid: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
-export const TaskMinOrderByAggregateInputSchema: z.ZodType<Prisma.TaskMinOrderByAggregateInput> = z.object({
-  id: z.lazy(() => SortOrderSchema).optional(),
-  title: z.lazy(() => SortOrderSchema).optional(),
-  text: z.lazy(() => SortOrderSchema).optional(),
-  completed: z.lazy(() => SortOrderSchema).optional(),
-  createdAt: z.lazy(() => SortOrderSchema).optional(),
-  completedAt: z.lazy(() => SortOrderSchema).optional(),
-  priority: z.lazy(() => SortOrderSchema).optional(),
-  userUid: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
-export const BoolWithAggregatesFilterSchema: z.ZodType<Prisma.BoolWithAggregatesFilter> = z.object({
-  equals: z.boolean().optional(),
-  not: z.union([ z.boolean(),z.lazy(() => NestedBoolWithAggregatesFilterSchema) ]).optional(),
-  _count: z.lazy(() => NestedIntFilterSchema).optional(),
-  _min: z.lazy(() => NestedBoolFilterSchema).optional(),
-  _max: z.lazy(() => NestedBoolFilterSchema).optional()
-}).strict();
-
-export const DateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.DateTimeNullableWithAggregatesFilter> = z.object({
-  equals: z.coerce.date().optional().nullable(),
-  in: z.coerce.date().array().optional().nullable(),
-  notIn: z.coerce.date().array().optional().nullable(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableWithAggregatesFilterSchema) ]).optional().nullable(),
-  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
-  _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
-  _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
-  isSet: z.boolean().optional()
-}).strict();
-
-export const MarketListItemListRelationFilterSchema: z.ZodType<Prisma.MarketListItemListRelationFilter> = z.object({
-  every: z.lazy(() => MarketListItemWhereInputSchema).optional(),
-  some: z.lazy(() => MarketListItemWhereInputSchema).optional(),
-  none: z.lazy(() => MarketListItemWhereInputSchema).optional()
 }).strict();
 
 export const MarketListItemOrderByRelationAggregateInputSchema: z.ZodType<Prisma.MarketListItemOrderByRelationAggregateInput> = z.object({
@@ -1458,13 +1179,6 @@ export const AuthTokenCreateNestedOneWithoutUserInputSchema: z.ZodType<Prisma.Au
   connect: z.lazy(() => AuthTokenWhereUniqueInputSchema).optional()
 }).strict();
 
-export const TaskCreateNestedManyWithoutUserInputSchema: z.ZodType<Prisma.TaskCreateNestedManyWithoutUserInput> = z.object({
-  create: z.union([ z.lazy(() => TaskCreateWithoutUserInputSchema),z.lazy(() => TaskCreateWithoutUserInputSchema).array(),z.lazy(() => TaskUncheckedCreateWithoutUserInputSchema),z.lazy(() => TaskUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
-  connectOrCreate: z.union([ z.lazy(() => TaskCreateOrConnectWithoutUserInputSchema),z.lazy(() => TaskCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
-  createMany: z.lazy(() => TaskCreateManyUserInputEnvelopeSchema).optional(),
-  connect: z.union([ z.lazy(() => TaskWhereUniqueInputSchema),z.lazy(() => TaskWhereUniqueInputSchema).array() ]).optional(),
-}).strict();
-
 export const MarketListCreateNestedManyWithoutUserInputSchema: z.ZodType<Prisma.MarketListCreateNestedManyWithoutUserInput> = z.object({
   create: z.union([ z.lazy(() => MarketListCreateWithoutUserInputSchema),z.lazy(() => MarketListCreateWithoutUserInputSchema).array(),z.lazy(() => MarketListUncheckedCreateWithoutUserInputSchema),z.lazy(() => MarketListUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => MarketListCreateOrConnectWithoutUserInputSchema),z.lazy(() => MarketListCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
@@ -1476,13 +1190,6 @@ export const AuthTokenUncheckedCreateNestedOneWithoutUserInputSchema: z.ZodType<
   create: z.union([ z.lazy(() => AuthTokenCreateWithoutUserInputSchema),z.lazy(() => AuthTokenUncheckedCreateWithoutUserInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => AuthTokenCreateOrConnectWithoutUserInputSchema).optional(),
   connect: z.lazy(() => AuthTokenWhereUniqueInputSchema).optional()
-}).strict();
-
-export const TaskUncheckedCreateNestedManyWithoutUserInputSchema: z.ZodType<Prisma.TaskUncheckedCreateNestedManyWithoutUserInput> = z.object({
-  create: z.union([ z.lazy(() => TaskCreateWithoutUserInputSchema),z.lazy(() => TaskCreateWithoutUserInputSchema).array(),z.lazy(() => TaskUncheckedCreateWithoutUserInputSchema),z.lazy(() => TaskUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
-  connectOrCreate: z.union([ z.lazy(() => TaskCreateOrConnectWithoutUserInputSchema),z.lazy(() => TaskCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
-  createMany: z.lazy(() => TaskCreateManyUserInputEnvelopeSchema).optional(),
-  connect: z.union([ z.lazy(() => TaskWhereUniqueInputSchema),z.lazy(() => TaskWhereUniqueInputSchema).array() ]).optional(),
 }).strict();
 
 export const MarketListUncheckedCreateNestedManyWithoutUserInputSchema: z.ZodType<Prisma.MarketListUncheckedCreateNestedManyWithoutUserInput> = z.object({
@@ -1515,20 +1222,6 @@ export const AuthTokenUpdateOneWithoutUserNestedInputSchema: z.ZodType<Prisma.Au
   update: z.union([ z.lazy(() => AuthTokenUpdateToOneWithWhereWithoutUserInputSchema),z.lazy(() => AuthTokenUpdateWithoutUserInputSchema),z.lazy(() => AuthTokenUncheckedUpdateWithoutUserInputSchema) ]).optional(),
 }).strict();
 
-export const TaskUpdateManyWithoutUserNestedInputSchema: z.ZodType<Prisma.TaskUpdateManyWithoutUserNestedInput> = z.object({
-  create: z.union([ z.lazy(() => TaskCreateWithoutUserInputSchema),z.lazy(() => TaskCreateWithoutUserInputSchema).array(),z.lazy(() => TaskUncheckedCreateWithoutUserInputSchema),z.lazy(() => TaskUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
-  connectOrCreate: z.union([ z.lazy(() => TaskCreateOrConnectWithoutUserInputSchema),z.lazy(() => TaskCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
-  upsert: z.union([ z.lazy(() => TaskUpsertWithWhereUniqueWithoutUserInputSchema),z.lazy(() => TaskUpsertWithWhereUniqueWithoutUserInputSchema).array() ]).optional(),
-  createMany: z.lazy(() => TaskCreateManyUserInputEnvelopeSchema).optional(),
-  set: z.union([ z.lazy(() => TaskWhereUniqueInputSchema),z.lazy(() => TaskWhereUniqueInputSchema).array() ]).optional(),
-  disconnect: z.union([ z.lazy(() => TaskWhereUniqueInputSchema),z.lazy(() => TaskWhereUniqueInputSchema).array() ]).optional(),
-  delete: z.union([ z.lazy(() => TaskWhereUniqueInputSchema),z.lazy(() => TaskWhereUniqueInputSchema).array() ]).optional(),
-  connect: z.union([ z.lazy(() => TaskWhereUniqueInputSchema),z.lazy(() => TaskWhereUniqueInputSchema).array() ]).optional(),
-  update: z.union([ z.lazy(() => TaskUpdateWithWhereUniqueWithoutUserInputSchema),z.lazy(() => TaskUpdateWithWhereUniqueWithoutUserInputSchema).array() ]).optional(),
-  updateMany: z.union([ z.lazy(() => TaskUpdateManyWithWhereWithoutUserInputSchema),z.lazy(() => TaskUpdateManyWithWhereWithoutUserInputSchema).array() ]).optional(),
-  deleteMany: z.union([ z.lazy(() => TaskScalarWhereInputSchema),z.lazy(() => TaskScalarWhereInputSchema).array() ]).optional(),
-}).strict();
-
 export const MarketListUpdateManyWithoutUserNestedInputSchema: z.ZodType<Prisma.MarketListUpdateManyWithoutUserNestedInput> = z.object({
   create: z.union([ z.lazy(() => MarketListCreateWithoutUserInputSchema),z.lazy(() => MarketListCreateWithoutUserInputSchema).array(),z.lazy(() => MarketListUncheckedCreateWithoutUserInputSchema),z.lazy(() => MarketListUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => MarketListCreateOrConnectWithoutUserInputSchema),z.lazy(() => MarketListCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
@@ -1551,20 +1244,6 @@ export const AuthTokenUncheckedUpdateOneWithoutUserNestedInputSchema: z.ZodType<
   delete: z.union([ z.boolean(),z.lazy(() => AuthTokenWhereInputSchema) ]).optional(),
   connect: z.lazy(() => AuthTokenWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => AuthTokenUpdateToOneWithWhereWithoutUserInputSchema),z.lazy(() => AuthTokenUpdateWithoutUserInputSchema),z.lazy(() => AuthTokenUncheckedUpdateWithoutUserInputSchema) ]).optional(),
-}).strict();
-
-export const TaskUncheckedUpdateManyWithoutUserNestedInputSchema: z.ZodType<Prisma.TaskUncheckedUpdateManyWithoutUserNestedInput> = z.object({
-  create: z.union([ z.lazy(() => TaskCreateWithoutUserInputSchema),z.lazy(() => TaskCreateWithoutUserInputSchema).array(),z.lazy(() => TaskUncheckedCreateWithoutUserInputSchema),z.lazy(() => TaskUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
-  connectOrCreate: z.union([ z.lazy(() => TaskCreateOrConnectWithoutUserInputSchema),z.lazy(() => TaskCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
-  upsert: z.union([ z.lazy(() => TaskUpsertWithWhereUniqueWithoutUserInputSchema),z.lazy(() => TaskUpsertWithWhereUniqueWithoutUserInputSchema).array() ]).optional(),
-  createMany: z.lazy(() => TaskCreateManyUserInputEnvelopeSchema).optional(),
-  set: z.union([ z.lazy(() => TaskWhereUniqueInputSchema),z.lazy(() => TaskWhereUniqueInputSchema).array() ]).optional(),
-  disconnect: z.union([ z.lazy(() => TaskWhereUniqueInputSchema),z.lazy(() => TaskWhereUniqueInputSchema).array() ]).optional(),
-  delete: z.union([ z.lazy(() => TaskWhereUniqueInputSchema),z.lazy(() => TaskWhereUniqueInputSchema).array() ]).optional(),
-  connect: z.union([ z.lazy(() => TaskWhereUniqueInputSchema),z.lazy(() => TaskWhereUniqueInputSchema).array() ]).optional(),
-  update: z.union([ z.lazy(() => TaskUpdateWithWhereUniqueWithoutUserInputSchema),z.lazy(() => TaskUpdateWithWhereUniqueWithoutUserInputSchema).array() ]).optional(),
-  updateMany: z.union([ z.lazy(() => TaskUpdateManyWithWhereWithoutUserInputSchema),z.lazy(() => TaskUpdateManyWithWhereWithoutUserInputSchema).array() ]).optional(),
-  deleteMany: z.union([ z.lazy(() => TaskScalarWhereInputSchema),z.lazy(() => TaskScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
 export const MarketListUncheckedUpdateManyWithoutUserNestedInputSchema: z.ZodType<Prisma.MarketListUncheckedUpdateManyWithoutUserNestedInput> = z.object({
@@ -1593,31 +1272,6 @@ export const UserUpdateOneRequiredWithoutAuthTokenNestedInputSchema: z.ZodType<P
   upsert: z.lazy(() => UserUpsertWithoutAuthTokenInputSchema).optional(),
   connect: z.lazy(() => UserWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => UserUpdateToOneWithWhereWithoutAuthTokenInputSchema),z.lazy(() => UserUpdateWithoutAuthTokenInputSchema),z.lazy(() => UserUncheckedUpdateWithoutAuthTokenInputSchema) ]).optional(),
-}).strict();
-
-export const UserCreateNestedOneWithoutTaskInputSchema: z.ZodType<Prisma.UserCreateNestedOneWithoutTaskInput> = z.object({
-  create: z.union([ z.lazy(() => UserCreateWithoutTaskInputSchema),z.lazy(() => UserUncheckedCreateWithoutTaskInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => UserCreateOrConnectWithoutTaskInputSchema).optional(),
-  connect: z.lazy(() => UserWhereUniqueInputSchema).optional()
-}).strict();
-
-export const BoolFieldUpdateOperationsInputSchema: z.ZodType<Prisma.BoolFieldUpdateOperationsInput> = z.object({
-  set: z.boolean().optional()
-}).strict();
-
-export const NullableDateTimeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.NullableDateTimeFieldUpdateOperationsInput> = z.object({
-  set: z.coerce.date().optional().nullable(),
-  unset: z.boolean().optional()
-}).strict();
-
-export const UserUpdateOneWithoutTaskNestedInputSchema: z.ZodType<Prisma.UserUpdateOneWithoutTaskNestedInput> = z.object({
-  create: z.union([ z.lazy(() => UserCreateWithoutTaskInputSchema),z.lazy(() => UserUncheckedCreateWithoutTaskInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => UserCreateOrConnectWithoutTaskInputSchema).optional(),
-  upsert: z.lazy(() => UserUpsertWithoutTaskInputSchema).optional(),
-  disconnect: z.boolean().optional(),
-  delete: z.union([ z.boolean(),z.lazy(() => UserWhereInputSchema) ]).optional(),
-  connect: z.lazy(() => UserWhereUniqueInputSchema).optional(),
-  update: z.union([ z.lazy(() => UserUpdateToOneWithWhereWithoutTaskInputSchema),z.lazy(() => UserUpdateWithoutTaskInputSchema),z.lazy(() => UserUncheckedUpdateWithoutTaskInputSchema) ]).optional(),
 }).strict();
 
 export const MarketListItemCreateNestedManyWithoutMarketListInputSchema: z.ZodType<Prisma.MarketListItemCreateNestedManyWithoutMarketListInput> = z.object({
@@ -1872,46 +1526,6 @@ export const NestedIntNullableFilterSchema: z.ZodType<Prisma.NestedIntNullableFi
   isSet: z.boolean().optional()
 }).strict();
 
-export const NestedBoolFilterSchema: z.ZodType<Prisma.NestedBoolFilter> = z.object({
-  equals: z.boolean().optional(),
-  not: z.union([ z.boolean(),z.lazy(() => NestedBoolFilterSchema) ]).optional(),
-}).strict();
-
-export const NestedDateTimeNullableFilterSchema: z.ZodType<Prisma.NestedDateTimeNullableFilter> = z.object({
-  equals: z.coerce.date().optional().nullable(),
-  in: z.coerce.date().array().optional().nullable(),
-  notIn: z.coerce.date().array().optional().nullable(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableFilterSchema) ]).optional().nullable(),
-  isSet: z.boolean().optional()
-}).strict();
-
-export const NestedBoolWithAggregatesFilterSchema: z.ZodType<Prisma.NestedBoolWithAggregatesFilter> = z.object({
-  equals: z.boolean().optional(),
-  not: z.union([ z.boolean(),z.lazy(() => NestedBoolWithAggregatesFilterSchema) ]).optional(),
-  _count: z.lazy(() => NestedIntFilterSchema).optional(),
-  _min: z.lazy(() => NestedBoolFilterSchema).optional(),
-  _max: z.lazy(() => NestedBoolFilterSchema).optional()
-}).strict();
-
-export const NestedDateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.NestedDateTimeNullableWithAggregatesFilter> = z.object({
-  equals: z.coerce.date().optional().nullable(),
-  in: z.coerce.date().array().optional().nullable(),
-  notIn: z.coerce.date().array().optional().nullable(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableWithAggregatesFilterSchema) ]).optional().nullable(),
-  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
-  _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
-  _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
-  isSet: z.boolean().optional()
-}).strict();
-
 export const NestedIntWithAggregatesFilterSchema: z.ZodType<Prisma.NestedIntWithAggregatesFilter> = z.object({
   equals: z.number().optional(),
   in: z.number().array().optional(),
@@ -1958,35 +1572,6 @@ export const AuthTokenCreateOrConnectWithoutUserInputSchema: z.ZodType<Prisma.Au
   create: z.union([ z.lazy(() => AuthTokenCreateWithoutUserInputSchema),z.lazy(() => AuthTokenUncheckedCreateWithoutUserInputSchema) ]),
 }).strict();
 
-export const TaskCreateWithoutUserInputSchema: z.ZodType<Prisma.TaskCreateWithoutUserInput> = z.object({
-  id: z.string().optional(),
-  title: z.string(),
-  text: z.string(),
-  completed: z.boolean(),
-  createdAt: z.coerce.date(),
-  completedAt: z.coerce.date().optional().nullable(),
-  priority: z.string()
-}).strict();
-
-export const TaskUncheckedCreateWithoutUserInputSchema: z.ZodType<Prisma.TaskUncheckedCreateWithoutUserInput> = z.object({
-  id: z.string().optional(),
-  title: z.string(),
-  text: z.string(),
-  completed: z.boolean(),
-  createdAt: z.coerce.date(),
-  completedAt: z.coerce.date().optional().nullable(),
-  priority: z.string()
-}).strict();
-
-export const TaskCreateOrConnectWithoutUserInputSchema: z.ZodType<Prisma.TaskCreateOrConnectWithoutUserInput> = z.object({
-  where: z.lazy(() => TaskWhereUniqueInputSchema),
-  create: z.union([ z.lazy(() => TaskCreateWithoutUserInputSchema),z.lazy(() => TaskUncheckedCreateWithoutUserInputSchema) ]),
-}).strict();
-
-export const TaskCreateManyUserInputEnvelopeSchema: z.ZodType<Prisma.TaskCreateManyUserInputEnvelope> = z.object({
-  data: z.union([ z.lazy(() => TaskCreateManyUserInputSchema),z.lazy(() => TaskCreateManyUserInputSchema).array() ]),
-}).strict();
-
 export const MarketListCreateWithoutUserInputSchema: z.ZodType<Prisma.MarketListCreateWithoutUserInput> = z.object({
   id: z.string().optional(),
   title: z.string(),
@@ -2031,36 +1616,6 @@ export const AuthTokenUncheckedUpdateWithoutUserInputSchema: z.ZodType<Prisma.Au
   expiresAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const TaskUpsertWithWhereUniqueWithoutUserInputSchema: z.ZodType<Prisma.TaskUpsertWithWhereUniqueWithoutUserInput> = z.object({
-  where: z.lazy(() => TaskWhereUniqueInputSchema),
-  update: z.union([ z.lazy(() => TaskUpdateWithoutUserInputSchema),z.lazy(() => TaskUncheckedUpdateWithoutUserInputSchema) ]),
-  create: z.union([ z.lazy(() => TaskCreateWithoutUserInputSchema),z.lazy(() => TaskUncheckedCreateWithoutUserInputSchema) ]),
-}).strict();
-
-export const TaskUpdateWithWhereUniqueWithoutUserInputSchema: z.ZodType<Prisma.TaskUpdateWithWhereUniqueWithoutUserInput> = z.object({
-  where: z.lazy(() => TaskWhereUniqueInputSchema),
-  data: z.union([ z.lazy(() => TaskUpdateWithoutUserInputSchema),z.lazy(() => TaskUncheckedUpdateWithoutUserInputSchema) ]),
-}).strict();
-
-export const TaskUpdateManyWithWhereWithoutUserInputSchema: z.ZodType<Prisma.TaskUpdateManyWithWhereWithoutUserInput> = z.object({
-  where: z.lazy(() => TaskScalarWhereInputSchema),
-  data: z.union([ z.lazy(() => TaskUpdateManyMutationInputSchema),z.lazy(() => TaskUncheckedUpdateManyWithoutUserInputSchema) ]),
-}).strict();
-
-export const TaskScalarWhereInputSchema: z.ZodType<Prisma.TaskScalarWhereInput> = z.object({
-  AND: z.union([ z.lazy(() => TaskScalarWhereInputSchema),z.lazy(() => TaskScalarWhereInputSchema).array() ]).optional(),
-  OR: z.lazy(() => TaskScalarWhereInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => TaskScalarWhereInputSchema),z.lazy(() => TaskScalarWhereInputSchema).array() ]).optional(),
-  id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  title: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  text: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  completed: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
-  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  completedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
-  priority: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  userUid: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
-}).strict();
-
 export const MarketListUpsertWithWhereUniqueWithoutUserInputSchema: z.ZodType<Prisma.MarketListUpsertWithWhereUniqueWithoutUserInput> = z.object({
   where: z.lazy(() => MarketListWhereUniqueInputSchema),
   update: z.union([ z.lazy(() => MarketListUpdateWithoutUserInputSchema),z.lazy(() => MarketListUncheckedUpdateWithoutUserInputSchema) ]),
@@ -2093,7 +1648,6 @@ export const UserCreateWithoutAuthTokenInputSchema: z.ZodType<Prisma.UserCreateW
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date(),
   passwordResetToken: z.string().optional().nullable(),
-  task: z.lazy(() => TaskCreateNestedManyWithoutUserInputSchema).optional(),
   marketLists: z.lazy(() => MarketListCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
@@ -2104,7 +1658,6 @@ export const UserUncheckedCreateWithoutAuthTokenInputSchema: z.ZodType<Prisma.Us
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date(),
   passwordResetToken: z.string().optional().nullable(),
-  task: z.lazy(() => TaskUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   marketLists: z.lazy(() => MarketListUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
@@ -2130,7 +1683,6 @@ export const UserUpdateWithoutAuthTokenInputSchema: z.ZodType<Prisma.UserUpdateW
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   passwordResetToken: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  task: z.lazy(() => TaskUpdateManyWithoutUserNestedInputSchema).optional(),
   marketLists: z.lazy(() => MarketListUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
@@ -2140,65 +1692,6 @@ export const UserUncheckedUpdateWithoutAuthTokenInputSchema: z.ZodType<Prisma.Us
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   passwordResetToken: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  task: z.lazy(() => TaskUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
-  marketLists: z.lazy(() => MarketListUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
-}).strict();
-
-export const UserCreateWithoutTaskInputSchema: z.ZodType<Prisma.UserCreateWithoutTaskInput> = z.object({
-  uid: z.string().optional(),
-  email: z.string(),
-  password: z.string(),
-  created_at: z.coerce.date().optional(),
-  updated_at: z.coerce.date(),
-  passwordResetToken: z.string().optional().nullable(),
-  authToken: z.lazy(() => AuthTokenCreateNestedOneWithoutUserInputSchema).optional(),
-  marketLists: z.lazy(() => MarketListCreateNestedManyWithoutUserInputSchema).optional()
-}).strict();
-
-export const UserUncheckedCreateWithoutTaskInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutTaskInput> = z.object({
-  uid: z.string().optional(),
-  email: z.string(),
-  password: z.string(),
-  created_at: z.coerce.date().optional(),
-  updated_at: z.coerce.date(),
-  passwordResetToken: z.string().optional().nullable(),
-  authToken: z.lazy(() => AuthTokenUncheckedCreateNestedOneWithoutUserInputSchema).optional(),
-  marketLists: z.lazy(() => MarketListUncheckedCreateNestedManyWithoutUserInputSchema).optional()
-}).strict();
-
-export const UserCreateOrConnectWithoutTaskInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutTaskInput> = z.object({
-  where: z.lazy(() => UserWhereUniqueInputSchema),
-  create: z.union([ z.lazy(() => UserCreateWithoutTaskInputSchema),z.lazy(() => UserUncheckedCreateWithoutTaskInputSchema) ]),
-}).strict();
-
-export const UserUpsertWithoutTaskInputSchema: z.ZodType<Prisma.UserUpsertWithoutTaskInput> = z.object({
-  update: z.union([ z.lazy(() => UserUpdateWithoutTaskInputSchema),z.lazy(() => UserUncheckedUpdateWithoutTaskInputSchema) ]),
-  create: z.union([ z.lazy(() => UserCreateWithoutTaskInputSchema),z.lazy(() => UserUncheckedCreateWithoutTaskInputSchema) ]),
-  where: z.lazy(() => UserWhereInputSchema).optional()
-}).strict();
-
-export const UserUpdateToOneWithWhereWithoutTaskInputSchema: z.ZodType<Prisma.UserUpdateToOneWithWhereWithoutTaskInput> = z.object({
-  where: z.lazy(() => UserWhereInputSchema).optional(),
-  data: z.union([ z.lazy(() => UserUpdateWithoutTaskInputSchema),z.lazy(() => UserUncheckedUpdateWithoutTaskInputSchema) ]),
-}).strict();
-
-export const UserUpdateWithoutTaskInputSchema: z.ZodType<Prisma.UserUpdateWithoutTaskInput> = z.object({
-  email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  password: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  passwordResetToken: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  authToken: z.lazy(() => AuthTokenUpdateOneWithoutUserNestedInputSchema).optional(),
-  marketLists: z.lazy(() => MarketListUpdateManyWithoutUserNestedInputSchema).optional()
-}).strict();
-
-export const UserUncheckedUpdateWithoutTaskInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutTaskInput> = z.object({
-  email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  password: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  passwordResetToken: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  authToken: z.lazy(() => AuthTokenUncheckedUpdateOneWithoutUserNestedInputSchema).optional(),
   marketLists: z.lazy(() => MarketListUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
@@ -2238,8 +1731,7 @@ export const UserCreateWithoutMarketListsInputSchema: z.ZodType<Prisma.UserCreat
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date(),
   passwordResetToken: z.string().optional().nullable(),
-  authToken: z.lazy(() => AuthTokenCreateNestedOneWithoutUserInputSchema).optional(),
-  task: z.lazy(() => TaskCreateNestedManyWithoutUserInputSchema).optional()
+  authToken: z.lazy(() => AuthTokenCreateNestedOneWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserUncheckedCreateWithoutMarketListsInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutMarketListsInput> = z.object({
@@ -2249,8 +1741,7 @@ export const UserUncheckedCreateWithoutMarketListsInputSchema: z.ZodType<Prisma.
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date(),
   passwordResetToken: z.string().optional().nullable(),
-  authToken: z.lazy(() => AuthTokenUncheckedCreateNestedOneWithoutUserInputSchema).optional(),
-  task: z.lazy(() => TaskUncheckedCreateNestedManyWithoutUserInputSchema).optional()
+  authToken: z.lazy(() => AuthTokenUncheckedCreateNestedOneWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserCreateOrConnectWithoutMarketListsInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutMarketListsInput> = z.object({
@@ -2304,8 +1795,7 @@ export const UserUpdateWithoutMarketListsInputSchema: z.ZodType<Prisma.UserUpdat
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   passwordResetToken: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  authToken: z.lazy(() => AuthTokenUpdateOneWithoutUserNestedInputSchema).optional(),
-  task: z.lazy(() => TaskUpdateManyWithoutUserNestedInputSchema).optional()
+  authToken: z.lazy(() => AuthTokenUpdateOneWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserUncheckedUpdateWithoutMarketListsInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutMarketListsInput> = z.object({
@@ -2314,8 +1804,7 @@ export const UserUncheckedUpdateWithoutMarketListsInputSchema: z.ZodType<Prisma.
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   passwordResetToken: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  authToken: z.lazy(() => AuthTokenUncheckedUpdateOneWithoutUserNestedInputSchema).optional(),
-  task: z.lazy(() => TaskUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+  authToken: z.lazy(() => AuthTokenUncheckedUpdateOneWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const PriceCreateWithoutMarketListItemInputSchema: z.ZodType<Prisma.PriceCreateWithoutMarketListItemInput> = z.object({
@@ -2460,46 +1949,9 @@ export const MarketListItemUncheckedUpdateWithoutPricesInputSchema: z.ZodType<Pr
   marketListId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
-export const TaskCreateManyUserInputSchema: z.ZodType<Prisma.TaskCreateManyUserInput> = z.object({
-  id: z.string().optional(),
-  title: z.string(),
-  text: z.string(),
-  completed: z.boolean(),
-  createdAt: z.coerce.date(),
-  completedAt: z.coerce.date().optional().nullable(),
-  priority: z.string()
-}).strict();
-
 export const MarketListCreateManyUserInputSchema: z.ZodType<Prisma.MarketListCreateManyUserInput> = z.object({
   id: z.string().optional(),
   title: z.string()
-}).strict();
-
-export const TaskUpdateWithoutUserInputSchema: z.ZodType<Prisma.TaskUpdateWithoutUserInput> = z.object({
-  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  text: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  completed: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  completedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  priority: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-}).strict();
-
-export const TaskUncheckedUpdateWithoutUserInputSchema: z.ZodType<Prisma.TaskUncheckedUpdateWithoutUserInput> = z.object({
-  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  text: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  completed: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  completedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  priority: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-}).strict();
-
-export const TaskUncheckedUpdateManyWithoutUserInputSchema: z.ZodType<Prisma.TaskUncheckedUpdateManyWithoutUserInput> = z.object({
-  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  text: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  completed: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  completedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  priority: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const MarketListUpdateWithoutUserInputSchema: z.ZodType<Prisma.MarketListUpdateWithoutUserInput> = z.object({
@@ -2702,68 +2154,6 @@ export const AuthTokenFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.AuthTokenFin
   select: AuthTokenSelectSchema.optional(),
   include: AuthTokenIncludeSchema.optional(),
   where: AuthTokenWhereUniqueInputSchema,
-}).strict() ;
-
-export const TaskFindFirstArgsSchema: z.ZodType<Prisma.TaskFindFirstArgs> = z.object({
-  select: TaskSelectSchema.optional(),
-  include: TaskIncludeSchema.optional(),
-  where: TaskWhereInputSchema.optional(),
-  orderBy: z.union([ TaskOrderByWithRelationInputSchema.array(),TaskOrderByWithRelationInputSchema ]).optional(),
-  cursor: TaskWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-  distinct: z.union([ TaskScalarFieldEnumSchema,TaskScalarFieldEnumSchema.array() ]).optional(),
-}).strict() ;
-
-export const TaskFindFirstOrThrowArgsSchema: z.ZodType<Prisma.TaskFindFirstOrThrowArgs> = z.object({
-  select: TaskSelectSchema.optional(),
-  include: TaskIncludeSchema.optional(),
-  where: TaskWhereInputSchema.optional(),
-  orderBy: z.union([ TaskOrderByWithRelationInputSchema.array(),TaskOrderByWithRelationInputSchema ]).optional(),
-  cursor: TaskWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-  distinct: z.union([ TaskScalarFieldEnumSchema,TaskScalarFieldEnumSchema.array() ]).optional(),
-}).strict() ;
-
-export const TaskFindManyArgsSchema: z.ZodType<Prisma.TaskFindManyArgs> = z.object({
-  select: TaskSelectSchema.optional(),
-  include: TaskIncludeSchema.optional(),
-  where: TaskWhereInputSchema.optional(),
-  orderBy: z.union([ TaskOrderByWithRelationInputSchema.array(),TaskOrderByWithRelationInputSchema ]).optional(),
-  cursor: TaskWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-  distinct: z.union([ TaskScalarFieldEnumSchema,TaskScalarFieldEnumSchema.array() ]).optional(),
-}).strict() ;
-
-export const TaskAggregateArgsSchema: z.ZodType<Prisma.TaskAggregateArgs> = z.object({
-  where: TaskWhereInputSchema.optional(),
-  orderBy: z.union([ TaskOrderByWithRelationInputSchema.array(),TaskOrderByWithRelationInputSchema ]).optional(),
-  cursor: TaskWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-}).strict() ;
-
-export const TaskGroupByArgsSchema: z.ZodType<Prisma.TaskGroupByArgs> = z.object({
-  where: TaskWhereInputSchema.optional(),
-  orderBy: z.union([ TaskOrderByWithAggregationInputSchema.array(),TaskOrderByWithAggregationInputSchema ]).optional(),
-  by: TaskScalarFieldEnumSchema.array(),
-  having: TaskScalarWhereWithAggregatesInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-}).strict() ;
-
-export const TaskFindUniqueArgsSchema: z.ZodType<Prisma.TaskFindUniqueArgs> = z.object({
-  select: TaskSelectSchema.optional(),
-  include: TaskIncludeSchema.optional(),
-  where: TaskWhereUniqueInputSchema,
-}).strict() ;
-
-export const TaskFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.TaskFindUniqueOrThrowArgs> = z.object({
-  select: TaskSelectSchema.optional(),
-  include: TaskIncludeSchema.optional(),
-  where: TaskWhereUniqueInputSchema,
 }).strict() ;
 
 export const MarketListFindFirstArgsSchema: z.ZodType<Prisma.MarketListFindFirstArgs> = z.object({
@@ -3033,48 +2423,6 @@ export const AuthTokenUpdateManyArgsSchema: z.ZodType<Prisma.AuthTokenUpdateMany
 
 export const AuthTokenDeleteManyArgsSchema: z.ZodType<Prisma.AuthTokenDeleteManyArgs> = z.object({
   where: AuthTokenWhereInputSchema.optional(),
-  limit: z.number().optional(),
-}).strict() ;
-
-export const TaskCreateArgsSchema: z.ZodType<Prisma.TaskCreateArgs> = z.object({
-  select: TaskSelectSchema.optional(),
-  include: TaskIncludeSchema.optional(),
-  data: z.union([ TaskCreateInputSchema,TaskUncheckedCreateInputSchema ]),
-}).strict() ;
-
-export const TaskUpsertArgsSchema: z.ZodType<Prisma.TaskUpsertArgs> = z.object({
-  select: TaskSelectSchema.optional(),
-  include: TaskIncludeSchema.optional(),
-  where: TaskWhereUniqueInputSchema,
-  create: z.union([ TaskCreateInputSchema,TaskUncheckedCreateInputSchema ]),
-  update: z.union([ TaskUpdateInputSchema,TaskUncheckedUpdateInputSchema ]),
-}).strict() ;
-
-export const TaskCreateManyArgsSchema: z.ZodType<Prisma.TaskCreateManyArgs> = z.object({
-  data: z.union([ TaskCreateManyInputSchema,TaskCreateManyInputSchema.array() ]),
-}).strict() ;
-
-export const TaskDeleteArgsSchema: z.ZodType<Prisma.TaskDeleteArgs> = z.object({
-  select: TaskSelectSchema.optional(),
-  include: TaskIncludeSchema.optional(),
-  where: TaskWhereUniqueInputSchema,
-}).strict() ;
-
-export const TaskUpdateArgsSchema: z.ZodType<Prisma.TaskUpdateArgs> = z.object({
-  select: TaskSelectSchema.optional(),
-  include: TaskIncludeSchema.optional(),
-  data: z.union([ TaskUpdateInputSchema,TaskUncheckedUpdateInputSchema ]),
-  where: TaskWhereUniqueInputSchema,
-}).strict() ;
-
-export const TaskUpdateManyArgsSchema: z.ZodType<Prisma.TaskUpdateManyArgs> = z.object({
-  data: z.union([ TaskUpdateManyMutationInputSchema,TaskUncheckedUpdateManyInputSchema ]),
-  where: TaskWhereInputSchema.optional(),
-  limit: z.number().optional(),
-}).strict() ;
-
-export const TaskDeleteManyArgsSchema: z.ZodType<Prisma.TaskDeleteManyArgs> = z.object({
-  where: TaskWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;
 

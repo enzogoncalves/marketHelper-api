@@ -1,8 +1,8 @@
 import z from 'zod';
-import { FastifyTypedInstance, APIGeneralResponseSchemaFunction } from "../../utils/types";
+import { FastifyTypedInstance, APIGeneralResponseSchemaFunction, APIGeneralResponseSchema } from "../../utils/types";
 import { authController } from "./auth_controller";
 import { authMiddleware } from "../../middlewares/auth";
-import { AuthTokenSchema } from "../../../prisma/generated/zod";
+import { AuthTokenSchema, UserSchema } from "../../../prisma/generated/zod";
 import { PrismaClient } from "@prisma/client";
 
 const signInUserSchema = z.object({
@@ -16,7 +16,12 @@ export type signInUserInput = z.infer<typeof signInUserSchema>
 
 const successSignInUserResponse = APIGeneralResponseSchemaFunction(z.object({
 	authorized: z.boolean(),
-	userId: z.string(),
+	user: UserSchema.omit({
+		password: true,
+		created_at: true,
+		updated_at: true,
+		passwordResetToken: true,
+	}),
 	token: AuthTokenSchema.omit({
 		id: true,
 		userId: true
@@ -46,12 +51,12 @@ export async function authRouter(app: FastifyTypedInstance) {
 			body: signInUserSchema,
 			response: {
 				200: successSignInUserResponse,
-				401: APIGeneralResponseSchemaFunction(z.null())
+				401: APIGeneralResponseSchema
 			},
 		}
 	}, authController.signIn)
 
-	app.delete('/signout', {
+	app.post('/signout', {
 		preHandler: [app.authenticate],
 		schema: {
 			tags: ['auth'],

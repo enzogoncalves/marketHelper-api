@@ -1,6 +1,6 @@
 import { MarketListItemSchema, MarketListSchema, PriceSchema } from "../../../prisma/generated/zod";
 import { authMiddleware } from "../../middlewares/auth";
-import { FastifyTypedInstance } from "../../utils/types";
+import { APIGeneralResponseSchemaFunction, FastifyTypedInstance } from "../../utils/types";
 import { marketListController } from "./marketList_controller";
 import z from 'zod'
 
@@ -9,6 +9,10 @@ const createListSchema = z.object({
 })
 
 export type createListInput = z.infer<typeof createListSchema>
+
+const createMarketListSchema = APIGeneralResponseSchemaFunction(MarketListSchema);
+
+export type createMarketListResponseType = z.infer<typeof createMarketListSchema>
 
 const getListSchema = z.object({
 	marketlist_id: z.string()
@@ -61,7 +65,7 @@ export async function marketListRouter(app: FastifyTypedInstance) {
 			description: 'Create a market list',
 			body: createListSchema,
 			response: {
-				200: MarketListSchema,
+				200: createMarketListSchema,
 				401: z.object({
 					message: z.string()
 				})
