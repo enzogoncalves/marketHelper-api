@@ -1,7 +1,6 @@
+import z from 'zod';
 import { UserSchema } from "../../../prisma/generated/zod";
-import { authMiddleware } from "../../middlewares/auth";
 import { FastifyTypedInstance } from "../../utils/types";
-import z from 'zod'
 import { userController } from "./user_controller";
 
 const getUserSchema = z.object({
@@ -12,7 +11,7 @@ export type getUserInput = z.infer<typeof getUserSchema>;
 
 export async function userRouter(app: FastifyTypedInstance) {
 	app.get('/', {
-		preHandler: [authMiddleware],
+		// preHandler: [authMiddleware],
 		schema: {
 			tags: ['user'],
 			description: 'Get user data',

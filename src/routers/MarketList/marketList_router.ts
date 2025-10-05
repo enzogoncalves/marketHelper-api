@@ -1,5 +1,4 @@
 import { MarketListItemSchema, MarketListSchema, PriceSchema } from "../../../prisma/generated/zod";
-import { authMiddleware } from "../../middlewares/auth";
 import { APIGeneralResponseSchemaFunction, FastifyTypedInstance } from "../../utils/types";
 import { marketListController } from "./marketList_controller";
 import z from 'zod'
@@ -59,7 +58,7 @@ export type deleteMarketListItemInput = z.infer<typeof deleteMarketListItemSchem
 
 export async function marketListRouter(app: FastifyTypedInstance) {
 	app.post('/', {
-		preHandler: [authMiddleware],
+		// // preHandler: [authMiddleware],
 		schema: {
 			tags: ['Market List'],
 			description: 'Create a market list',
@@ -74,7 +73,7 @@ export async function marketListRouter(app: FastifyTypedInstance) {
 	}, marketListController.createList)
 
 	app.get('/:marketlist_id', {
-		preHandler: [authMiddleware],
+		preHandler: [app.authenticate],
 		schema: {
 			tags: ['Market List'],
 			description: 'Gets the data of a single market list',
@@ -91,7 +90,7 @@ export async function marketListRouter(app: FastifyTypedInstance) {
 	}, marketListController.getList)
 
 	app.get('/:marketlist_id/items', {
-		preHandler: [authMiddleware],
+		// // preHandler: [authMiddleware],
 		schema: {
 			tags: ['Market List'],
 			description: 'Gets the data of a single market list and his items',
@@ -108,7 +107,7 @@ export async function marketListRouter(app: FastifyTypedInstance) {
 	}, marketListController.getListItems)
 
 	app.delete('/deleteList', {
-		preHandler: [authMiddleware],
+		// // preHandler: [authMiddleware],
 		schema: {
 			tags: ['Market List'],
 			description: 'Delete a market list and his entire data',
@@ -122,7 +121,7 @@ export async function marketListRouter(app: FastifyTypedInstance) {
 	}, marketListController.deleteList)
 
 	app.delete('/deleteItem', {
-		preHandler: [authMiddleware],
+		// // preHandler: [authMiddleware],
 		schema: {
 			tags: ['Market List'],
 			description: 'Delete an item of a market list',

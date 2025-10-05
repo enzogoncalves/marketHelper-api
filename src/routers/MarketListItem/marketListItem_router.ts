@@ -36,7 +36,7 @@ export type getMarketListItemQueryType = z.infer<typeof getMarketListItemQuery>
 
 export function marketListItemRouter(app: FastifyTypedInstance) {
 	app.post('/', {
-		preHandler: [authMiddleware],
+		// preHandler: [authMiddleware],
 		schema: {
 			tags: ['Market List Item'],
 			description: 'Add an item to a market list',
@@ -48,7 +48,7 @@ export function marketListItemRouter(app: FastifyTypedInstance) {
 	}, marketListItemController.create)
 
 	app.get('/', {
-		preHandler: [authMiddleware],
+		// preHandler: [authMiddleware],
 		schema: {
 			tags: ['Market List Item'],
 			description: 'Get an item of a market list',

@@ -81,8 +81,8 @@ export const usersController = {
 		}
 	},
 
-	getUser: async (req: FastifyRequest<{Params: getUserInput}>, reply: FastifyReply) => {
-		const { userId } = req.params;
+	getUser: async (req: FastifyRequest<{Body: any}>, reply: FastifyReply) => {
+		const { uid: userId } = req.user;
 
 		console.log('aqui')
 		console.log(userId)

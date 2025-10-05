@@ -39,13 +39,15 @@ export const marketListController = {
 	},
 
 	getList: async (req: FastifyRequest<{Body: any, Params: getMarketListInput, Reply: any}>, reply: FastifyReply<{Reply: {200: marketListType, 404: {message: String}, 500: {message: String}}}>) => {
-		const { marketlist_id } = req.params
-		const { headers: { user_id } } = req
+		const { marketlist_id } = req.params;
+		const { uid: userId } = req.user;
+
+		console.log(req.user);
 
 		await prisma.marketList.findFirst({
 			where: {
 				id: marketlist_id,
-				userUid: user_id as string
+				userUid: userId
 			}
 		}).then((data) => {
 			if(data == null) return reply.status(404).send({message: 'This list could not be found.'})

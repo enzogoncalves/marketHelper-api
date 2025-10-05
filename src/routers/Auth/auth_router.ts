@@ -1,9 +1,8 @@
-import z from 'zod';
-import { FastifyTypedInstance, APIGeneralResponseSchemaFunction, APIGeneralResponseSchema } from "../../utils/types";
-import { authController } from "./auth_controller";
-import { authMiddleware } from "../../middlewares/auth";
-import { AuthTokenSchema, UserSchema } from "../../../prisma/generated/zod";
 import { PrismaClient } from "@prisma/client";
+import z from 'zod';
+import { AuthTokenSchema, UserSchema } from "../../../prisma/generated/zod";
+import { APIGeneralResponseSchema, APIGeneralResponseSchemaFunction, FastifyTypedInstance } from "../../utils/types";
+import { authController } from "./auth_controller";
 
 const signInUserSchema = z.object({
 	email: z.string().email(),
@@ -70,7 +69,7 @@ export async function authRouter(app: FastifyTypedInstance) {
 	}, authController.signout)
 
 	app.post('/reset-password', {
-		preHandler: [authMiddleware],
+		// preHandler: [authMiddleware],
 		schema: {
 			description: 'Reset password (send email to reset the password)',
 			tags: ['auth'],

@@ -1,6 +1,6 @@
+import fp from 'fastify-plugin'
 import { PrismaClient } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
-import fp from 'fastify-plugin'
 import { JWTInvalid } from "jose/errors";
 import { jwtVerify } from "jose/jwt/verify"
 import { z } from "zod";
@@ -14,7 +14,7 @@ export const tokenResponseSchema = z.object({
 
 export type tokenResponseType = z.infer<typeof tokenResponseSchema>
 
-const authMiddleware = async (app: FastifyTypedInstance) => {
+async function authPlugin (app: FastifyTypedInstance) {
 
 	app.decorate('user', null)
 
@@ -26,7 +26,8 @@ const authMiddleware = async (app: FastifyTypedInstance) => {
 				token: auth_token as string,
 			},
 			select: {
-				token: true
+				token: true,
+				userId: true,
 			}
 		})
 		.then(async (data) => {
@@ -41,7 +42,7 @@ const authMiddleware = async (app: FastifyTypedInstance) => {
 			const secret = new TextEncoder().encode(process.env.JWT_SECRET_KEY)
 
 			if(!secret) {
-				throw new Error('JWT_SECRET is not configured on the server.')
+				throw new Error('JWT_SECRET is not configured on the server.') 
 			}
 
 			// if(data?.authToken!.token == null)
@@ -52,11 +53,24 @@ const authMiddleware = async (app: FastifyTypedInstance) => {
 					audience: 'urn:example:audience'
 				})
 				
-				// console.log(`payload: ${payload}`)
-				// console.log(`protectedHeader: ${protectedHeader}`)
+				
+				await prisma.user.findUnique({
+					where: {
+						uid: data!.userId
+					}, select: {
+						uid: true,
+						email: true
+					}
+				}).then((user) => {
+					if(!user) {
+						throw new Error('User not found.');
+					}
 
-				// commented to prevent the limit of the api call
-				// return reply.status(200).send({message: 'Authorized'})
+					req.user = user;
+				}).catch(e => {
+					console.log(e);
+				})
+
 			} catch(e) {
 				console.log(e)
 				const error = e as JWTInvalid
@@ -78,10 +92,10 @@ const authMiddleware = async (app: FastifyTypedInstance) => {
 			console.log(e)
 			return reply.status(401).send({
 				authorized: false,
-				message: 'Something went wrong while verifying the token'
+				message: 'Something went wrong while getting the token'
 			});
 		});
 	});
 }
 
-export default fp(authMiddleware);
+export default fp(authPlugin);

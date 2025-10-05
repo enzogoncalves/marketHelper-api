@@ -2,23 +2,92 @@ import { PrismaClient } from "@prisma/client";
 import { addMinutes, addMonths } from "date-fns";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { SignJWT } from "jose";
-import { EmailParams, MailerSend, Recipient, Sender } from "mailersend";
 import { JWTInvalid } from "jose/errors";
-import { jwtVerify } from "jose/jwt/verify"
+import { jwtVerify } from "jose/jwt/verify";
+import { EmailParams, MailerSend, Recipient, Sender } from "mailersend";
 
 import { logoutUserInput, resetPasswordInput, signInUserInput, successSignInUserResponseType } from "./auth_router";
 
 import bcrypt from 'bcrypt';
-import { APIGeneralResponseType } from "../../utils/types";
 import { z } from "zod";
-import { UserSchema } from "../../../prisma/generated/zod";
+import { AuthTokenSchema } from "../../../prisma/generated/zod";
+import { APIGeneralResponseType } from "../../utils/types";
+
+async function isTokenExpired(token: string): Promise<boolean> {
+	const secret = new TextEncoder().encode(process.env.JWT_SECRET_KEY)
+
+	if(!secret) {
+		throw new Error('JWT_SECRET is not configured on the server.')
+	}
+
+	console.log(secret)
+
+	try {
+		const { payload, protectedHeader } = await jwtVerify(token, secret, {
+			issuer: 'urn:example:issuer',
+			audience: 'urn:example:audience'
+		})
+
+		return false;
+	} catch(e) {
+			console.log('here 3')
+			const error = e as JWTInvalid
+
+			switch(error.code) {
+				case 'ERR_JWT_EXPIRED':
+					return true;
+				default: 
+					return true;
+			}
+		}
+}
+
+const authTokenWithoutIdsSchema = AuthTokenSchema.omit({id: true, userId: true})
+
+type authTokenWithoutIdsType = z.infer<typeof authTokenWithoutIdsSchema>
+
+async function createJwtToken(): Promise<authTokenWithoutIdsType> {
+	const date = new Date();
+	const timeToExpiresTokenInMonths = 1;
+	
+	/**
+	 * Use addSeconds(), addMinutes(), addDays() functions to set the token expired date
+	*/
+	const tokenExpiredDate = addMonths(date, timeToExpiresTokenInMonths)
+
+	let jwt;
+
+	try {
+		const secret = new TextEncoder().encode(process.env.JWT_SECRET_KEY)
+			
+		const alg = 'HS256'
+		
+		jwt = await new SignJWT({  })
+		.setProtectedHeader({ alg })
+		.setIssuedAt()
+		.setIssuer('urn:example:issuer')
+		.setAudience('urn:example:audience')
+		.setExpirationTime(tokenExpiredDate)
+		.sign(secret)
+	} catch(e) {
+		console.log('aqui')
+		console.log(e)
+		throw new Error('Unable to create JWT Token')
+	}
+
+	return {
+		token: jwt!,
+		expiresAt: tokenExpiredDate,
+		createdAt: date,
+	} as authTokenWithoutIdsType
+}
 
 const prisma = new PrismaClient()
 
 export const authController = {
-	signIn: async (req: FastifyRequest<{Body: signInUserInput}>, reply: FastifyReply<{Reply: {200: successSignInUserResponseType, 401: APIGeneralResponseType, 400: any, 500: any}, Body: signInUserInput}>) => {
+	signIn: async (req: FastifyRequest<{Body: signInUserInput}>, reply: FastifyReply<{Reply: {200: successSignInUserResponseType, 401: APIGeneralResponseType, 400: any, 500: APIGeneralResponseType}, Body: signInUserInput}>) => {
 		const { email, password } = req.body;
-		console.log(req.jwt)
+		// console.log(req.jwt)
 		
 		const user = await prisma.user.findFirst({
 			where: {
@@ -43,94 +112,138 @@ export const authController = {
 			})
 		}
 
+		// if the user already has a valid token, increase the time to expire
+
 		const userToken = await prisma.authToken.findFirst({
 			where: {
 				userId: user.uid
 			},
 			select: {
+				id: true,
 				token: true,
 				expiresAt: true,
 				createdAt: true,
 			}
 		})
 
-		const secret = new TextEncoder().encode(process.env.JWT_SECRET_KEY)
+		if(userToken) {
+			const verifyIfTokenIsExpired = await isTokenExpired(userToken.token)
+			
+			if(!verifyIfTokenIsExpired) {
+				console.log('Não foi preciso atualizar o token')
 
-		try {
-			const { payload, protectedHeader } = await jwtVerify(userToken!.token, secret, {
-				issuer: 'urn:example:issuer',
-				audience: 'urn:example:audience'
-			})
-		} catch(e) {
-			console.log(e)
-			const error = e as JWTInvalid
+				return reply.status(200).send({
+					message: 'User signed in successfully',
+					success: true,
+					data: {
+						authorized: true,
+						token: userToken,
+						user: {
+							email: user.email,
+							uid: user.uid
+						}
+					}	
+				}) //TODO: add headers
 
-			switch(error.code) {
-				case 'ERR_JWT_EXPIRED':
-					// TODO: what happens if the token is expired:
-					
-				default: 
-					return reply.status(401).send({
+			} else {
+				const newToken = await createJwtToken();
+
+				await prisma.authToken.update({
+					where: {
+						id: userToken.id
+					}, data : newToken
+				}).then((updatedToken) => {
+					console.log('Conseguimos atualizar o token')
+
+						reply.status(200).send({
+						message: 'User signed in successfully',
+						success: true,
+						data: {
+							authorized: true,
+							token: updatedToken,
+							user: {
+								email: user.email,
+								uid: user.uid
+							}
+						}	
+					})
+				}).catch((e) => {
+					console.log('unable to update token')
+					console.log(e);
+
+					return reply.status(500).send({
+						message: 'Unable to update token',
 						success: false,
 						error: {
-							statusCode: '401',
-							type: 'AUTH_INVALID_CREDENTIALS',
-						},
-						message: 'Invalid token'
-					});
+							statusCode: '500',
+							type: 'AUTH_TOKEN'
+						}
+					})
+				})
 			}
 		}
 
-		if(userToken) {
-			reply.status(200).send({
-				message: 'User signed in successfully',
-				success: true,
-				data: {
-					authorized: true,
-					token: userToken,
-					user: {
-						email: user.email,
-						uid: user.uid
-					}
-				}	
-			})
-		}
-
-
-
-		const date = new Date();
-		const timeToExpiresTokenInHours = 1;
 		
-		/**
-		 * Use addSeconds(), addMinutes(), addDays() functions to set the token expired date
-		*/
-		const tokenExpiredDate = addMonths(date, timeToExpiresTokenInHours)
 
-		let jwt;
-
-		try {
-			const secret = new TextEncoder().encode(process.env.JWT_SECRET_KEY)
-				
-			const alg = 'HS256'
+		// if(userToken) {
+		// 	const verifyIfTokenIsExpired = await isTokenExpired(userToken.token)
 			
-			jwt = await new SignJWT({  })
-			.setProtectedHeader({ alg })
-			.setIssuedAt()
-			.setIssuer('urn:example:issuer')
-			.setAudience('urn:example:audience')
-			.setExpirationTime(tokenExpiredDate)
-			.sign(secret)
-		} catch(e) {
-			console.log('aqui')
-			console.log(e)
-			reply.status(500).send('Unable to create JWT Token')
-		}
+		// 	if(!verifyIfTokenIsExpired) {
+		// 		return reply.status(200)
+		// 	}
+		// }
+
+		// const secret = new TextEncoder().encode(process.env.JWT_SECRET_KEY)
+
+		// try {
+		// 	const { payload, protectedHeader } = await jwtVerify(userToken!.token, secret, {
+		// 		issuer: 'urn:example:issuer',
+		// 		audience: 'urn:example:audience'
+		// 	})
+
+
+		// } catch(e) {
+		// 	console.log(e)
+		// 	const error = e as JWTInvalid
+
+		// 	switch(error.code) {
+		// 		case 'ERR_JWT_EXPIRED':
+		// 			// TODO: what happens if the token is expired:
+					
+		// 		default: 
+		// 			return reply.status(401).send({
+		// 				success: false,
+		// 				error: {
+		// 					statusCode: '401',
+		// 					type: 'AUTH_INVALID_CREDENTIALS',
+		// 				},
+		// 				message: 'Invalid token'
+		// 			});
+		// 	}
+		// }
+
+		// if(userToken) {
+		// 	reply.status(200).send({
+		// 		message: 'User signed in successfully',
+		// 		success: true,
+		// 		data: {
+		// 			authorized: true,
+		// 			token: userToken,
+		// 			user: {
+		// 				email: user.email,
+		// 				uid: user.uid
+		// 			}
+		// 		}	
+		// 	})
+		// }
+
+		const newToken = await createJwtToken();
 
 		const tokenConnectedToUser = await prisma.authToken.create({
 			data: { 
-				token: jwt!, 
-				createdAt: date, 
-				expiresAt: tokenExpiredDate, 
+				token: newToken.token, 
+				createdAt: newToken.createdAt, 
+				expiresAt: newToken.expiresAt, 
 				user: {
 					connect: {
 						uid: user.uid
@@ -145,18 +258,22 @@ export const authController = {
 			}
 		})
 
-		const payload = {
-			uid: user.uid,
-			email: user.email,
-		}
-	
-		const token = req.jwt.sign(payload)
+		// JWT WITH FASTIFY PLUGIN
 
-		reply.setCookie('access_token', token, {
-			path: '/',
-			httpOnly: true,
-			secure: true
-		})
+		// const payload = {
+		// 	uid: user.uid,
+		// 	email: user.email,
+		// }
+	
+		// const token = req.jwt.sign(payload)
+
+		// reply.setCookie('access_token', token, {
+		// 	path: '/',
+		// 	httpOnly: true,
+		// 	secure: true
+		// })
+
+		// end JWT WITH FASTIFY PLUGIN
 
 		reply.status(200).send({
 			message: 'User signed in successfully',
@@ -173,10 +290,7 @@ export const authController = {
 	},
 	
 	signout: async(req: FastifyRequest<{Body: logoutUserInput}>, reply: FastifyReply) => {
-		const { authTokenId, userId } = req.body
-
-		console.log(`authTokenId: ${authTokenId}`)
-		console.log(`userId: ${userId}`)
+		const { authTokenId, userId } = req.body;
 
 		try {
 			const authToken = await prisma.authToken.delete({
@@ -194,9 +308,6 @@ export const authController = {
 			console.log(e)
 			return reply.status(500).send(e)
 		}
-
-
-		return reply.send({ message: 'Logout successful '})
 	},
 
 	sendPasswordResetLinkInEmail: async (req: FastifyRequest<{Body: resetPasswordInput}>, reply: FastifyReply) => {

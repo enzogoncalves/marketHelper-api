@@ -54,11 +54,10 @@ export async function usersRouter(app: FastifyTypedInstance) {
 	})
 
 	app.get('/:userId', {
-			preHandler: [authMiddleware],
+			preHandler: [app.authenticate],
 			schema: {
 				tags: ['user'],
-				description: 'Get user data',
-				
+				description: 'Get user data',	
 			}
 		}, usersController.getUser)
 

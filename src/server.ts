@@ -18,6 +18,8 @@ import { imageDetectionRouter } from "./routers/ImageDetection/imageDetection_ro
 import path from "path";
 import { textExtractionRouter } from "./routers/TextExtraction/textExtractionRouter";
 
+import authPlugin from './middlewares/auth'
+
 export const app = Fastify().withTypeProvider<ZodTypeProvider>();
 
 app.setValidatorCompiler(validatorCompiler)
@@ -34,35 +36,37 @@ app.register(FastifyMultipart, {
 	}
 })
 
+app.register(authPlugin)
+
 // app.register(fastifyStatic), ({
 //   root: path.join(__dirname, 'uploads'), // Path to your uploads directory
 //   prefix: '/images/', // Optional: Prefix for serving images
 // });
 
-app.addHook('preHandler', (req, res, next) => {
-	req.jwt = app.jwt
-	return next()
-})
+// app.addHook('preHandler', (req, res, next) => {
+// 	req.jwt = app.jwt
+// 	return next()
+// })
 
 //cookies
-app.register(fCookie, {
-	secret: 'some-secret-key',
-	hook: 'preHandler'
-})
+// app.register(fCookie, {
+// 	secret: 'some-secret-key',
+// 	hook: 'preHandler'
+// })
 
-app.decorate(
-	'authenticate',
-	async (req: FastifyRequest, reply: FastifyReply) => {
-		const token = req.cookies.access_token
+// app.decorate(
+// 	'authenticate',
+// 	async (req: FastifyRequest, reply: FastifyReply) => {
+// 		const token = req.cookies.access_token
 
-		if (!token) {
-      return reply.status(401).send({ message: 'Authentication required' })
-    }
-    // here decoded will be a different type by default but we want it to be of user-payload type
-    const decoded = req.jwt.verify<FastifyJWT['user']>(token)
-    req.user = decoded
-	}
-)
+// 		if (!token) {
+//       return reply.status(401).send({ message: 'Authentication required' })
+//     }
+//     // here decoded will be a different type by default but we want it to be of user-payload type
+//     const decoded = req.jwt.verify<FastifyJWT['user']>(token)
+//     req.user = decoded
+// 	}
+// )
 
 app.register(fastifySwagger, {
 	openapi: {
