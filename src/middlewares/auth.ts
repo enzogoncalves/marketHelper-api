@@ -4,7 +4,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { JWTInvalid } from "jose/errors";
 import { jwtVerify } from "jose/jwt/verify"
 import { z } from "zod";
-import { FastifyTypedInstance } from "../utils/types";
+import { FastifyTypedInstance } from "../utils/types.js";
 const prisma = new PrismaClient()
 
 export const tokenResponseSchema = z.object({
@@ -20,6 +20,11 @@ async function authPlugin (app: FastifyTypedInstance) {
 
 	app.decorate('authenticate', async (req: FastifyRequest, reply: FastifyReply) => {
 		const { headers: { auth_token } } = req;
+
+		if(auth_token === undefined) {
+			console.log('Token not found');
+			return reply.status(401).send()
+		}
 
 		await prisma.authToken.findFirst({
 			where: {

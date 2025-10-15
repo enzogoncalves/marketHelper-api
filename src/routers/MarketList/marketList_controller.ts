@@ -1,17 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
-import { MarketListSchema } from "../../../prisma/generated/zod";
-import { createListInput, createMarketListResponseType, deleteListInput, deleteListResponseType, deleteMarketListItemInput, getMarketListInput, getMarketListItemsType, marketListItemType } from "./marketList_router";
-import { APIGeneralResponseType } from "../../utils/types";
+import { MarketListItem, MarketListItemSchema, MarketListSchema } from "../../../prisma/generated/zod/index.js";
+import { APIGeneralResponseType } from "../../utils/types.js";
+import { CreateListInput, createListItemInput, createMarketListResponseType, deleteListInput, deleteMarketListItemInput, getListItemResponseType, MarketListInput, getMarketListItemsType, marketListItemsType, getMarketListItemParamsType } from "./marketList_router.js";
 
 type marketListType = z.infer<typeof MarketListSchema>
+
 const prisma = new PrismaClient()
 
 export const marketListController = {
-	createList: async (req: FastifyRequest<{Body: createListInput, Params: any, Reply: any}>, reply: FastifyReply<{Body: createListInput, Reply: {200: createMarketListResponseType, 401: APIGeneralResponseType, 500: APIGeneralResponseType}}>) => {
+	createList: async (req: FastifyRequest<{Body: CreateListInput, Params: any, Reply: any}>, reply: FastifyReply<{Reply: {200: createMarketListResponseType, 401: APIGeneralResponseType, 500: APIGeneralResponseType}}>) => {
 		const { title } = req.body
-		const { headers: { user_id } } = req
+		const { uid: user_id } = req.user; 
 
 		await prisma.marketList.create({
 			data: {
@@ -38,16 +39,16 @@ export const marketListController = {
 		})
 	},
 
-	getList: async (req: FastifyRequest<{Body: any, Params: getMarketListInput, Reply: any}>, reply: FastifyReply<{Reply: {200: marketListType, 404: {message: String}, 500: {message: String}}}>) => {
-		const { marketlist_id } = req.params;
+	getList: async (req: FastifyRequest<{Body: any, Params: MarketListInput, Reply: any}>, reply: FastifyReply<{Reply: {200: marketListType, 404: {message: String}, 500: {message: String}}}>) => {
+		const { market_list_id } = req.params;
 		const { uid: userId } = req.user;
 
 		console.log(req.user);
 
 		await prisma.marketList.findFirst({
 			where: {
-				id: marketlist_id,
-				userUid: userId
+				id: market_list_id,
+				userUid: userId // if this line is removed, any user could access any list by its id
 			}
 		}).then((data) => {
 			if(data == null) return reply.status(404).send({message: 'This list could not be found.'})
@@ -58,13 +59,13 @@ export const marketListController = {
 		})
 	},
 
-	getListItems: async (req: FastifyRequest<{Body: any, Params: getMarketListInput, Reply: any}>, reply: FastifyReply<{Reply: {200: getMarketListItemsType, 404: {message: String}, 500: {message: String}}}>) => {
-		const { marketlist_id } = req.params
-		const { headers: { user_id } } = req
+	getListItems: async (req: FastifyRequest<{Body: any, Params: MarketListInput, Reply: any}>, reply: FastifyReply<{Reply: {200: getMarketListItemsType, 404: {message: String}, 500: {message: String}}}>) => {
+		const { market_list_id } = req.params
+		const { uid: user_id } = req.user
 
 		await prisma.marketList.findFirst({
 			where: {
-				id: marketlist_id,
+				id: market_list_id,
 				userUid: user_id as string
 			}
 		}).then(async (data) => {	
@@ -72,7 +73,7 @@ export const marketListController = {
 
 			await prisma.marketListItem.findMany({
 				where: {
-					marketListId: marketlist_id,
+					marketListId: market_list_id,
 				},
 				omit: {
 					marketListId: true
@@ -80,7 +81,7 @@ export const marketListController = {
 			}).then(async (marketListItemsWithoutPrice) => {
 				if(marketListItemsWithoutPrice == null) return reply.status(404).send({message: 'Items could not be found.'})
 
-				const marketListItems: Array<marketListItemType> = []
+				const marketListItems: Array<marketListItemsType> = []
 
 				for(const marketListItemWithoutPrice of marketListItemsWithoutPrice) {
 					await prisma.price.findMany({
@@ -118,51 +119,52 @@ export const marketListController = {
 		})
 	},
 
-	deleteList: async (req: FastifyRequest<{Body: deleteListInput, Params: any, Reply: any}>, reply: FastifyReply<{Reply: {200: deleteListResponseType, 400: deleteListResponseType, 500: deleteListResponseType}}>) => {
-		const { marketList_id } = req.body
-		const { headers: { user_uid } } = req
+	deleteList: async (req: FastifyRequest<{Body: any, Params: deleteListInput, Reply: any}>, reply: FastifyReply) => {
+		const { market_list_id } = req.params
+		const { uid: user_id } = req.user
 
-		await Promise.all([
-			await prisma.price.deleteMany({
-				where: {
-					MarketListItem: {
-						marketListId: marketList_id
+		try {
+			await Promise.all([
+				await prisma.price.deleteMany({
+					where: {
+						MarketListItem: {
+							marketListId: market_list_id
+						}
 					}
-				}
-			}),
-			await prisma.marketListItem.deleteMany({
-				where: {
-					marketListId: marketList_id
-				}
-			}),
-			await prisma.marketList.delete({
-				where: {
-					id: marketList_id,
-					userUid: user_uid as string
-				}
-			}),
-		]).then((data) => {
-			console.log(data)
-			return reply.status(200).send({
-				deleted: true,
-				message: 'List deleted successfully'
+				}),
+				await prisma.marketListItem.deleteMany({
+					where: {
+						marketListId: market_list_id
+					}
+				}),
+				await prisma.marketList.delete({
+					where: {
+						id: market_list_id,
+						userUid: user_id as string
+					}
+				}),
+			]).then((data) => {
+				console.log(data)
+				return reply.status(200).send()
+			}).catch((e) => {
+				console.log('aqui 1')
+				console.log(e)
+				return reply.status(500).send()
 			})
-		}).catch((e) => {
-			console.log(e)
-			return reply.status(500).send({
-				deleted: false,
-				message: 'Something went wrong'
-			})
-		})
+		} catch(e) {
+			console.log('aqui 2')
+			console.log(e);
+			return reply.status(500).send()
+		}
 	},
 
-	deleteItem: async (req: FastifyRequest<{Body: deleteMarketListItemInput, Params: any, Reply: any}>, reply: FastifyReply<{Reply: {200: any, 404: {message: String}, 500: {message: String}}}>) => {
-		const { marketList_id, marketListItem_id } = req.body
-		const { headers: { user_id } } = req
+	deleteItem: async (req: FastifyRequest<{Body: any, Params: deleteMarketListItemInput, Reply: any}>, reply: FastifyReply<{Reply: {200: any, 404: {message: String}, 500: {message: String}}}>) => {
+		const { market_list_id, market_list_item_id } = req.params
+		const { uid: user_id } = req.user
 
 		await prisma.marketList.findFirst({
 			where: {
-				id: marketList_id,
+				id: market_list_id,
 				userUid: user_id as string
 			}
 		}).then( async(data) => {	
@@ -170,14 +172,14 @@ export const marketListController = {
 
 			await prisma.price.deleteMany({
 				where: {
-					marketListItemId: marketListItem_id
+					marketListItemId: market_list_item_id
 				}
 			}).then(async (prices) => {
 				console.log(prices)
 
 				await prisma.marketListItem.delete({
 				where: {
-					id: marketListItem_id
+					id: market_list_item_id
 				}
 					}).then((marketListItem) => {
 						return reply.status(200).send({message: 'Item deleted successfully', item: marketListItem})
@@ -197,5 +199,109 @@ export const marketListController = {
 			console.log(e)
 			return reply.status(500).send({message: 'Something went wrong 2'})
 		})
-	}
+	},
+
+  // MARKET LIST ITEM CONTROLLER
+
+	createItem: async (req: FastifyRequest<{Body: createListItemInput, Params: MarketListInput, Reply: any}>, reply: FastifyReply<{Reply: {200: MarketListItem, 404: {message: string}, 500: {message: string}}}>) => {
+		const { name, prices, quantity, currency, weight, brand } = req.body 
+		const {market_list_id } = req.params
+		const { uid: user_id } = req.user
+
+		console.log(req.params)
+
+		await prisma.marketList.findFirst({
+			where: {
+				id: market_list_id,
+				userUid: user_id as string
+			}
+		}).then( async(data) => {	
+			console.log(data)
+			console.log(market_list_id)
+
+			if(data == null) return reply.status(404).send({message: 'This list could not be found.'})
+			
+			await prisma.marketListItem.create({
+				data: {
+					name: name,
+					weight: weight,
+					prices: {
+						create: prices
+					},
+					brand: brand,
+					quantity: quantity,
+					currency: currency,
+					MarketList: {
+						connect: {
+							id: market_list_id
+						}
+					},
+				}
+			}).then((marketListItem) => {
+				console.log(marketListItem)
+				return reply.status(200).send(marketListItem)
+			}).catch((e) => {
+				return reply.status(500).send({message: 'Something went wrong'})
+			})
+			
+		}).catch(e => {
+			console.log(e)
+			return reply.status(500).send({message: 'Something went wrong'})
+		})
+	},
+
+	getItem: async (req: FastifyRequest<{Body: any, Params: getMarketListItemParamsType, Reply: any}>, reply: FastifyReply<{Reply: {200: getListItemResponseType, 404: {message: string}, 500: {message: string}}}>) => {
+		const {  market_list_id, market_list_item_id } = req.params
+		const { uid: user_id } = req.user
+
+		await prisma.marketList.findFirst({
+			where: {
+				id: market_list_id,
+				userUid: user_id as string
+			}
+		}).then( async(data) => {	
+			console.log(data)
+			console.log(market_list_id)
+
+			if(data == null) return reply.status(404).send({message: 'This list could not be found.'})
+			
+			await prisma.marketListItem.findFirst({
+				where: {
+					id: market_list_item_id,
+					marketListId: market_list_id
+				}
+			}).then(async(marketListItem) => {
+				console.log(marketListItem)
+				if(marketListItem == null) return reply.status(404).send({message: 'This list item could not be found.'}) 
+
+				await prisma.price.findMany({
+					where: {
+						marketListItemId: marketListItem.id,
+					}
+				}).then((prices) => {
+					console.table(prices)
+
+					const item = {
+						marketListItem,
+						prices: prices
+					}
+
+					console.log(item)
+
+					return reply.status(200).send(item)
+				}).catch((e) => {
+					console.log(e)
+					return reply.status(500).send({message: 'Something went wrong'})
+				})
+				
+			}).catch((e) => {
+				return reply.status(500).send({message: 'Something went wrong'})
+			})
+			
+		}).catch(e => {
+			console.log(e)
+			return reply.status(500).send({message: 'Something went wrong'})
+		})
+	},
+
 }

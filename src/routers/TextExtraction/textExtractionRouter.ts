@@ -1,7 +1,7 @@
 import axios from "axios";
 import ollama from 'ollama'
 import fs from 'fs/promises';
-import { FastifyTypedInstance } from "../../utils/types";
+import { FastifyTypedInstance } from "../../utils/types.js";
 import path from "path";
 import z from "zod";
 

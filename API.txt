@@ -1,7 +1,7 @@
 API
 
 auth/
-	post /signIn  -> Sign In an user
+	post /login  -> Sign In an user
 	post /signout -> Signout an user
 	post /reset-password -> Send email to reset the password
 
@@ -25,12 +25,13 @@ users/
 	post / -> register a new user
 
 TODO's:
-	- error.type organization (create a file to separate differents error.statusCode and error.type)
+	- change the authenticate method through decorator //
+	- error.type organization - create a file to separate differents error.statusCode and error.type
 	- load balancer nginx
 	- what happens if the token is expired
 	- singleton instance of Prisma
 	- remove userId from the req.body
-	- change the authenticate method through decorator
+	- make marketListItem functions and routers inside the marketList structure 
 
 	src/plugins/auth.ts
 

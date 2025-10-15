@@ -1,9 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import z, { any } from 'zod';
-import { UserSchema } from "../../../prisma/generated/zod";
-import { authMiddleware } from "../../middlewares/auth";
-import { FastifyTypedInstance, APIGeneralResponseSchema } from "../../utils/types";
-import { usersController } from "./users_controller";
+import { UserSchema } from "../../../prisma/generated/zod/index.js";
+import { FastifyTypedInstance, APIGeneralResponseSchema } from "../../utils/types.js";
+import { usersController } from "./users_controller.js";
 
 const prisma = new PrismaClient()
 

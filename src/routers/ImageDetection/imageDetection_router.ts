@@ -2,7 +2,7 @@ import * as fss from 'fs';
 import fs from 'fs/promises';
 
 import z from 'zod';
-import { FastifyTypedInstance } from "../../utils/types";
+import { FastifyTypedInstance } from "../../utils/types.js";
 
 import * as tf from '@tensorflow/tfjs';
 

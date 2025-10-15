@@ -6,12 +6,11 @@ import { JWTInvalid } from "jose/errors";
 import { jwtVerify } from "jose/jwt/verify";
 import { EmailParams, MailerSend, Recipient, Sender } from "mailersend";
 
-import { logoutUserInput, resetPasswordInput, signInUserInput, successSignInUserResponseType } from "./auth_router";
-
 import bcrypt from 'bcrypt';
 import { z } from "zod";
-import { AuthTokenSchema } from "../../../prisma/generated/zod";
-import { APIGeneralResponseType } from "../../utils/types";
+import { AuthTokenSchema } from "../../../prisma/generated/zod/index.js";
+import { APIGeneralResponseType } from "../../utils/types.js";
+import { loginUserSchema, logoutUserSchema, successLoginUserResponse } from "./auth_shema.js";
 
 async function isTokenExpired(token: string): Promise<boolean> {
 	const secret = new TextEncoder().encode(process.env.JWT_SECRET_KEY)
@@ -19,8 +18,6 @@ async function isTokenExpired(token: string): Promise<boolean> {
 	if(!secret) {
 		throw new Error('JWT_SECRET is not configured on the server.')
 	}
-
-	console.log(secret)
 
 	try {
 		const { payload, protectedHeader } = await jwtVerify(token, secret, {
@@ -30,7 +27,6 @@ async function isTokenExpired(token: string): Promise<boolean> {
 
 		return false;
 	} catch(e) {
-			console.log('here 3')
 			const error = e as JWTInvalid
 
 			switch(error.code) {
@@ -70,7 +66,6 @@ async function createJwtToken(): Promise<authTokenWithoutIdsType> {
 		.setExpirationTime(tokenExpiredDate)
 		.sign(secret)
 	} catch(e) {
-		console.log('aqui')
 		console.log(e)
 		throw new Error('Unable to create JWT Token')
 	}
@@ -82,10 +77,20 @@ async function createJwtToken(): Promise<authTokenWithoutIdsType> {
 	} as authTokenWithoutIdsType
 }
 
+/**
+ * AUTH TYPES
+ */
+
+type logoutUserInput = z.infer<typeof logoutUserSchema>
+
+type successLoginUserResponseType = z.infer<typeof successLoginUserResponse>
+
+type loginUserInput = z.infer<typeof loginUserSchema>
+
 const prisma = new PrismaClient()
 
 export const authController = {
-	signIn: async (req: FastifyRequest<{Body: signInUserInput}>, reply: FastifyReply<{Reply: {200: successSignInUserResponseType, 401: APIGeneralResponseType, 400: any, 500: APIGeneralResponseType}, Body: signInUserInput}>) => {
+	login: async (req: FastifyRequest<{Body: loginUserInput}>, reply: FastifyReply<{Reply: {200: successLoginUserResponseType, 401: APIGeneralResponseType, 400: any, 500: APIGeneralResponseType}, Body: loginUserInput}>) => {
 		const { email, password } = req.body;
 		// console.log(req.jwt)
 		
@@ -132,18 +137,18 @@ export const authController = {
 			if(!verifyIfTokenIsExpired) {
 				console.log('Não foi preciso atualizar o token')
 
+				reply.header("authorization", userToken.token);
+
 				return reply.status(200).send({
 					message: 'User signed in successfully',
 					success: true,
 					data: {
-						authorized: true,
-						token: userToken,
 						user: {
 							email: user.email,
 							uid: user.uid
 						}
 					}	
-				}) //TODO: add headers
+				})
 
 			} else {
 				const newToken = await createJwtToken();
@@ -155,12 +160,12 @@ export const authController = {
 				}).then((updatedToken) => {
 					console.log('Conseguimos atualizar o token')
 
-						reply.status(200).send({
+					reply.header("authorization", userToken.token);
+
+					reply.status(200).send({
 						message: 'User signed in successfully',
 						success: true,
 						data: {
-							authorized: true,
-							token: updatedToken,
 							user: {
 								email: user.email,
 								uid: user.uid
@@ -274,18 +279,22 @@ export const authController = {
 		// })
 
 		// end JWT WITH FASTIFY PLUGIN
+		console.log('Criamos um novo token')
+
+		reply.header("authorization", tokenConnectedToUser.token);
 
 		reply.status(200).send({
 			message: 'User signed in successfully',
 			success: true,
 			data: {
-				authorized: true,
-				token: tokenConnectedToUser,
 				user: {
 					email: user.email,
 					uid: user.uid
 				}
 			}	
+		}).headers({
+			authorization: tokenConnectedToUser.token,
+			accept: 'application/json'
 		})
 	},
 	
@@ -293,25 +302,24 @@ export const authController = {
 		const { authTokenId, userId } = req.body;
 
 		try {
-			const authToken = await prisma.authToken.delete({
+			await prisma.authToken.delete({
 				where: {
 					id: authTokenId,
 					userId: userId
 				}
 			})
 
-			console.log(authToken)
 			reply.clearCookie('access_token')
-			return reply.status(200).send({message: 'Logout successful'})
+
+			return reply.status(200)
 		} catch(e) {
 			console.log('unable to delete authToken')
-			console.log(e)
 			return reply.status(500).send(e)
 		}
 	},
 
-	sendPasswordResetLinkInEmail: async (req: FastifyRequest<{Body: resetPasswordInput}>, reply: FastifyReply) => {
-		const { email } = req.body
+	sendPasswordResetLinkInEmail: async (req: FastifyRequest, reply: FastifyReply) => {
+		const { email } = req.user
 
 		await prisma.user.findFirst({
 			where: {

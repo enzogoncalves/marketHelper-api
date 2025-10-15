@@ -9,18 +9,23 @@ import fastifySwaggerUi from "@fastify/swagger-ui";
 import fjwt, { FastifyJWT } from '@fastify/jwt'
 import fCookie from '@fastify/cookie'
 
-import { userRouter } from "./routers/User/user_router";
-import { usersRouter } from "./routers/Users/users_router";
-import { authRouter } from "./routers/Auth/auth_router";
-import { marketListRouter } from "./routers/MarketList/marketList_router";
-import { marketListItemRouter } from "./routers/MarketListItem/marketListItem_router";
-import { imageDetectionRouter } from "./routers/ImageDetection/imageDetection_router";
+import ScalarApiReference from '@scalar/fastify-api-reference';
+
+
+import { userRouter } from "./routers/User/user_router.js";
+import { usersRouter } from "./routers/Users/users_router.js";
+import { authRouter } from "./routers/Auth/auth_router.js";
+import { marketListRouter } from "./routers/MarketList/marketList_router.js";
+import { imageDetectionRouter } from "./routers/ImageDetection/imageDetection_router.js";
 import path from "path";
-import { textExtractionRouter } from "./routers/TextExtraction/textExtractionRouter";
+import { textExtractionRouter } from "./routers/TextExtraction/textExtractionRouter.js";
 
-import authPlugin from './middlewares/auth'
+import authPlugin from './middlewares/auth.js'
+import { version } from "os";
 
-export const app = Fastify().withTypeProvider<ZodTypeProvider>();
+export const app = Fastify({
+	logger: true
+}).withTypeProvider<ZodTypeProvider>();
 
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
@@ -68,7 +73,9 @@ app.register(authPlugin)
 // 	}
 // )
 
+// Generate Open Api Documentation (if this gets deleted, the scalar and swaggerUi will not work)
 app.register(fastifySwagger, {
+	prefix: '/docs',
 	openapi: {
 		info: {
 			title: 'Market Helper API',
@@ -78,19 +85,27 @@ app.register(fastifySwagger, {
 	transform: jsonSchemaTransform
 })
 
-app.register(fastifySwaggerUi, {
-	routePrefix: '/docs'
+// If you want to use Swagger UI
+// app.register(fastifySwaggerUi, {
+// 	routePrefix: '/docs'
+// })
+
+// Scalar Api Reference
+await app.register(ScalarApiReference, {
+  routePrefix: '/reference',
+	configuration: {
+		title: 'Market Helper API',
+	},
 })
 
 app.get('/', async (req, reply) => {
-	reply.send({ message: `Welcome to the Market Helper API! Please read the documentations at http://localhost:3000/docs`  })
+	reply.send({ message: `Welcome to the Market Helper API! Please read the documentations at http://localhost:3000/reference`  })
 })
 
 app.register(authRouter, { prefix: '/auth'})
 app.register(userRouter, { prefix: '/user'})
 app.register(usersRouter, { prefix: '/users'})
-app.register(marketListRouter, { prefix: '/marketList'})
-app.register(marketListItemRouter, { prefix: '/marketListItem'})
+app.register(marketListRouter, { prefix: '/market-list'})
 app.register(imageDetectionRouter, { prefix: '/imageDetection'})
 app.register(textExtractionRouter, { prefix: '/textExtraction'})
 

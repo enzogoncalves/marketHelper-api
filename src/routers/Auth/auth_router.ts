@@ -1,59 +1,23 @@
 import { PrismaClient } from "@prisma/client";
 import z from 'zod';
-import { AuthTokenSchema, UserSchema } from "../../../prisma/generated/zod";
-import { APIGeneralResponseSchema, APIGeneralResponseSchemaFunction, FastifyTypedInstance } from "../../utils/types";
-import { authController } from "./auth_controller";
-
-const signInUserSchema = z.object({
-	email: z.string().email(),
-	password: z.string()
-})
+import { APIGeneralResponseSchema, FastifyTypedInstance } from "../../utils/types.js";
+import { authController } from "./auth_controller.js";
+import { loginUserSchema, logoutUserSchema, successLoginUserResponse } from "./auth_shema.js";
 
 const prisma = new PrismaClient()
 
-export type signInUserInput = z.infer<typeof signInUserSchema>
-
-const successSignInUserResponse = APIGeneralResponseSchemaFunction(z.object({
-	authorized: z.boolean(),
-	user: UserSchema.omit({
-		password: true,
-		created_at: true,
-		updated_at: true,
-		passwordResetToken: true,
-	}),
-	token: AuthTokenSchema.omit({
-		id: true,
-		userId: true
-	})
-}))
-
-export type successSignInUserResponseType = z.infer<typeof successSignInUserResponse>
-
-const logoutUserSchema = z.object({
-	authTokenId: z.string(),
-	userId: z.string()
-})
-
-export type logoutUserInput = z.infer<typeof logoutUserSchema>
-
-const resetPasswordSchema = z.object({
-	email: z.string().email()
-})
-
-export type resetPasswordInput = z.infer<typeof resetPasswordSchema>
-
 export async function authRouter(app: FastifyTypedInstance) {
-	app.post('/signIn', {
+	app.post('/login', {
 		schema: {
 			tags: ['auth'],
-			description: 'SignIn a user',
-			body: signInUserSchema,
+			description: 'Login a user',
+			body: loginUserSchema,
 			response: {
-				200: successSignInUserResponse,
+				200: successLoginUserResponse,
 				401: APIGeneralResponseSchema
 			},
 		}
-	}, authController.signIn)
+	}, authController.login)
 
 	app.post('/signout', {
 		preHandler: [app.authenticate],
@@ -73,7 +37,6 @@ export async function authRouter(app: FastifyTypedInstance) {
 		schema: {
 			description: 'Reset password (send email to reset the password)',
 			tags: ['auth'],
-			body: resetPasswordSchema,
 		}
 	}, authController.sendPasswordResetLinkInEmail)
 
